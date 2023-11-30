@@ -10,11 +10,11 @@
     <div class="wrapper d-flex align-items-stretch">
       <nav id="sidebar">
     <div class="p-4 pt-5">
-      <a href="#" class="img logo rounded-circle mb-5" style="background-image: url(images/R.png);"></a>
+      <a class="img logo rounded-circle mb-5" style="background-image: url(images/R.png);"></a>
       <p style="text-align: center; font-size: 20px">¡Bienvenido {{ Auth::user()->name }}!</p>
         <ul class="list-unstyled components mb-5">
         <li >
-            <a href="#" ><i class="bi bi-house"></i> Inicio</a>
+            <a href="/admin" ><i class="bi bi-house"></i> Inicio</a>
             
         </li>
         <li>

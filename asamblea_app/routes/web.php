@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\usuariosController;
 use Illuminate\Support\Facades\Route;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -24,9 +24,12 @@ Route::get('/usuarios', function () {
 
 Route::get('/admin', function () {
     return view('admin');
-})->middleware(Authenticate::class);
+});
 
 Route::post('/',[UserController::class, 'login2'])->name('iniciar');
-
 Route::post('/logout',[UserController::class, 'logout'])->name('cerrar');
 
+
+Route::get('usuario',[usuariosController::class, 'index'])->name('usuario.index');
+Route::post('usuario',[usuariosController::class, 'registrar'])->name('usuario.registrar');
+Route::get('usuario/eliminar/{id}',[usuariosController::class, 'eliminar'])->name('usuario.eliminar');
