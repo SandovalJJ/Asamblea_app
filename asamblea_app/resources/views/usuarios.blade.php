@@ -146,7 +146,7 @@
       // Recargar la instancia de DataTables para mostrar el nuevo usuario
       $('#tabla-usuarios').DataTable().ajax.reload();
 
-          toastr.warning('El registro se ha eliminado correctamente', 'Eliminar Registro', {timeOut: 3000});
+         
     }
   },
   error: function(response) {
@@ -160,27 +160,31 @@
     </script>
     <script>
       var user_id;
-      $(document).on('click','.delete', function(){
-        user_id = $(this).attr('id');
-        $('#confirmodal').modal('show');
+      $(document).on('click', '.delete', function(){
+    user_id = $(this).attr('id');
+    $('#confirmodal').modal('show');
+});
 
-      });
+$('#btnEliminar').click(function(){
+    $.ajax({
+        url: "usuario/eliminar/" + user_id,
 
-      $('#btnEliminar').click(function(){
-        $.ajax({
-          url:"usuario/eliminar/"+user_id,
-          beforeSend:function(){
-            $('#btnEliminar').text('Eliminando...')
-          },
-          success:function(data){
-            setTimeout(function(){
-              $('#confirmodal').modal('hide');
-              toastr.warning('El registro se ha eliminado correctamente', 'Eliminar Registro', {timeOut: 3000});
-              $('#tabla-usuarios').DataTable().ajax.reload();
-            }, 2000);
-          }
-        })
-      });
+        success: function(data){
+            $('#confirmodal').modal('hide');
+            toastr.warning('El registro se ha eliminado correctamente', 'Eliminar Registro', {timeOut: 3000});
+            $('#tabla-usuarios').DataTable().ajax.reload();
+        },
+        error: function(error){
+            toastr.error('Hubo un error al eliminar', 'Error', {timeOut: 3000});
+            $('#btnEliminar').text('Eliminar'); // Restablece el texto si hay un error
+        }
+    });
+});
+
+$('#confirmodal').on('hide.bs.modal', function (e) {
+    $('#btnEliminar').text('Eliminar');
+});
+
     </script>
     @endsection
   </body>
