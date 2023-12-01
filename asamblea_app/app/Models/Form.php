@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Form extends Model {
-    public function fields() {
+class Form extends Model
+{
+    protected $fillable = ['name'];
+
+    public function fields()
+    {
         return $this->hasMany(FormField::class);
     }
 }

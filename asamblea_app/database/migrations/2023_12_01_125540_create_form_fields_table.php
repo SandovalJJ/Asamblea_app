@@ -12,8 +12,8 @@ class CreateFormFieldsTable extends Migration
             $table->id();
             $table->foreignId('form_id')->constrained()->onDelete('cascade');
             $table->string('label'); // Etiqueta del campo
-            $table->string('type'); // Tipo de campo (texto, número, etc.)
-            $table->json('options')->nullable(); // Columna para opciones de campos
+            $table->string('type'); // Tipo de campo (sí/no, opción múltiple, etc.)
+            $table->json('options')->nullable(); // Opciones para el campo, si es necesario
             $table->timestamps();
         });
     }

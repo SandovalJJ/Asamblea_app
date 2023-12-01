@@ -38,3 +38,6 @@ Route::get('usuario/eliminar/{id}',[usuariosController::class, 'eliminar'])->nam
 
 Route::get('/formularios', [FormController::class, 'create'])->name('form.create');
 Route::post('/formularios', [FormController::class, 'store'])->name('forms.store');
+
+
+Route::get('/show_formulario', [FormController::class, 'show'])->name('formularios.index');

@@ -21,8 +21,11 @@
             <a href="/usuarios"><i class="bi bi-people"></i> Usuarios</a>
         </li>
         <li>
-        <a href="{{ route('form.create') }}"><i class="bi bi-card-checklist"></i> Formularios</a>
+        <a href="/show_formulario"><i class="bi bi-card-checklist"></i> Formularios</a>
         
+        </li>
+        <li>
+        <a href="{{ route('form.create') }}"><i class="bi bi-input-cursor-text"></i></i> Crear Formulario</a>
         </li>
         <li>
         <a href="#"><i class="bi bi-bar-chart-line"></i></i> Respuestas</a>

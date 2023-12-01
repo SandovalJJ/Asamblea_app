@@ -21,29 +21,39 @@ class FormController extends Controller
             'fields' => 'required|array', // Validación para los campos del formulario
             'fields.*.label' => 'required|string', // Validación para la etiqueta de cada campo
             'fields.*.type' => 'required|string', // Validación para el tipo de cada campo
+            'fields.*.options' => 'nullable|array', // Validación para las opciones de los campos
         ]);
+
+        // Crear primero el formulario
+        $form = Form::create(['name' => $validatedData['name']]);
+
+        // Luego, asociar los campos con el formulario
         foreach ($validatedData['fields'] as $field) {
-            $options = $field['type'] == 'multiple' ? $field['options'] : null;
-    
+            if ($field['type'] == 'yes_no') {
+                $options = ["Si", "No"];
+            } else {
+                $options = $field['type'] == 'multiple' ? $field['options'] : null;
+            }
+
             $form->fields()->create([
                 'label' => $field['label'],
                 'type' => $field['type'],
-                'options' => $options
+                'options' => $options,
             ]);
         }
 
-        $form = Form::create(['name' => $validatedData['name']]);
 
-        foreach ($validatedData['fields'] as $field) {
-            $form->fields()->create([
-                'label' => $field['label'],
-                'type' => $field['type']
-            ]);
-        }
-
-        // Redirigir a donde sea necesario después de crear el formulario
-        // return redirect()->route('ruta_de_redirección_después_de_crear');
+        return redirect()->back();
     }
 
-    // Otros métodos que puedas necesitar (edit, update, delete, etc.)
+    // En tu FormController o el controlador que maneje la visualización de los formularios
+
+        public function show()
+        {
+            $formularios = Form::with('fields')->get();
+            return view('show_formulario', compact('formularios'));
+        }
+    
+    
+
 }
