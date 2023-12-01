@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FormController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\usuariosController;
 use Illuminate\Support\Facades\Route;
@@ -33,3 +34,7 @@ Route::post('/logout',[UserController::class, 'logout'])->name('cerrar');
 Route::get('usuario',[usuariosController::class, 'index'])->name('usuario.index');
 Route::post('usuario',[usuariosController::class, 'registrar'])->name('usuario.registrar');
 Route::get('usuario/eliminar/{id}',[usuariosController::class, 'eliminar'])->name('usuario.eliminar');
+
+
+Route::get('/formularios', [FormController::class, 'create'])->name('form.create');
+Route::post('/formularios', [FormController::class, 'store'])->name('forms.store');

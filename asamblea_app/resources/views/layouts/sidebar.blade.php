@@ -21,7 +21,7 @@
             <a href="/usuarios"><i class="bi bi-people"></i> Usuarios</a>
         </li>
         <li>
-        <a href="#"><i class="bi bi-card-checklist"></i> Formularios</a>
+        <a href="{{ route('form.create') }}"><i class="bi bi-card-checklist"></i> Formularios</a>
         
         </li>
         <li>
