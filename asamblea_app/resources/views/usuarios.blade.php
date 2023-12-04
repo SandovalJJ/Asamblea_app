@@ -14,9 +14,7 @@
             <button type="button" id="sidebarCollapse" class="btn btn-primary">
               <i class="fa fa-bars"></i>
             </button>
-        <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5">
-
 
         <h2 class="mb-4">¡Bienvenid@ al software de asamblea, {{ Auth::user()->name }}!</h2>
         <div id="content" class="">
@@ -40,11 +38,9 @@
                       </tr>
                     </thead>
                     <tbody>
-
                     </tbody>
                   </table>
             </div>
-
             <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
  
               <div class="registration-form">
@@ -56,23 +52,35 @@
                     <div class="form-group">
                       <input type="email" class="form-control item" name="email" id="correo" placeholder="Email">
                     </div>
+                    
                     <div class="form-group">
-                        <button type="submit" class="btn btn-block create-account">Crear usuario</button>
-                    </div>
+                      <input type="text" class="form-control item" name="cedula" id="cedula" placeholder="Cédula">
+                  </div>
+                  <div class="form-group">
+                      <input type="text" class="form-control item" name="agencia" id="agencia" placeholder="Agencia">
+                  </div>
+                  <div class="form-group">
+                      <input type="text" class="form-control item" name="cuenta" id="cuenta" placeholder="Cuenta">
+                  </div>
+                  <div class="form-group">
+                      <input type="text" class="form-control item" name="telefono" id="telefono" placeholder="Teléfono">
+                  </div>
+                  <p>Selecciona un rol</p>
+                  <div class="form-group">
+                    <select class="form-control" name="rol" id="rol">
+                        <option value="DELEGADO">DELEGADO</option>
+                        <option value="SUPLENTE">SUPLENTE</option>
+                    </select>
+                </div>
+                  <div class="form-group">
+                    <button type="submit" class="btn btn-primary create-account">Crear usuario</button>
+                </div>
                 </form>
-               
             </div>
-
-
-
-
             </div>
-
           </div>
         </div>
       </div>
-
-<!-- Modal eliminar -->
 <div class="modal fade" id="confirmodal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -94,10 +102,6 @@
 		</div>
 
     @extends('layouts.footer')
-    <!-- jQuery -->
-
-
-
     <script>
 
       $(document).ready(function(){
@@ -122,41 +126,51 @@
     });
 
       })
-  
-    </script>
+      </script>
     <script>
       $('#registro-usuario').submit(function(e){
-        e.preventDefault();
-        var nombre = $('#nombreU').val();
-        var email = $('#correo').val();
-        var _token = $("input[name=_token]").val();
+    e.preventDefault();
 
-        $.ajax({
-          url: "{{ route('usuario.registrar') }}",
-          type: "POST",
-          data: {
-          nombreU: nombre,
-          email: email,
-          _token: _token
-  },
-  success: function(response) {
-    if(response) {
-      $('#registro-usuario')[0].reset();
-      toastr.success('El registro se ingresó correctamente', 'Nuevo Registro', {timeOut: 3000});
-      // Recargar la instancia de DataTables para mostrar el nuevo usuario
-      $('#tabla-usuarios').DataTable().ajax.reload();
+    // Recolectar los valores de los campos del formulario
+    var nombre = $('#nombreU').val();
+    var email = $('#correo').val();
+    var cedula = $('#cedula').val();
+    var agencia = $('#agencia').val();
+    var cuenta = $('#cuenta').val();
+    var telefono = $('#telefono').val();
+    var rol = $('#rol').val();
+    var _token = $("input[name=_token]").val();
 
-         
-    }
-  },
-  error: function(response) {
-    // Manejar errores, por ejemplo, mostrar un mensaje de error
-    toastr.error('Hubo un error al registrar el usuario', 'Error', {timeOut: 3000});
-  }
+    // Crear un objeto con los datos del formulario
+    var formData = {
+        nombreU: nombre,
+        email: email,
+        cedula: cedula,
+        agencia: agencia,
+        cuenta: cuenta,
+        telefono: telefono,
+        rol: rol,
+        _token: _token
+    };
+
+
+    // Enviar los datos al servidor usando AJAX
+    $.ajax({
+        url: "{{ route('usuario.registrar') }}",
+        type: "POST",
+        data: formData,
+        success: function(response) {
+            if(response) {
+                $('#registro-usuario')[0].reset();
+                toastr.success('El registro se ingresó correctamente', 'Nuevo Registro', {timeOut: 3000});
+                $('#tabla-usuarios').DataTable().ajax.reload();
+            }
+        },
+        error: function(response) {
+            toastr.error('Hubo un error al registrar el usuario', 'Error', {timeOut: 3000});
+        }
+    });
 });
-
-
-      });
     </script>
     <script>
       var user_id;
@@ -164,7 +178,6 @@
     user_id = $(this).attr('id');
     $('#confirmodal').modal('show');
 });
-
 $('#btnEliminar').click(function(){
     $.ajax({
         url: "usuario/eliminar/" + user_id,

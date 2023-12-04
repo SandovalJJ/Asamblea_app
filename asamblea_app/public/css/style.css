@@ -2071,11 +2071,11 @@ fieldset:disabled a.btn {
   pointer-events: none; }
 
 .btn-primary {
-  color: #fff;
+  color: #000000;
   background-color: #007bff;
   border-color: #007bff; }
   .btn-primary:hover {
-    color: #fff;
+    color: #1d1919;
     background-color: #0069d9;
     border-color: #0062cc; }
   .btn-primary:focus, .btn-primary.focus {

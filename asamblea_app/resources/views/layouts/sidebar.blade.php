@@ -1,4 +1,6 @@
-<!-- resources/views/layouts/sidebar.blade.php -->
+@php
+$lastFormId = \App\Models\Form::latest()->first()->id ?? null;
+@endphp
 
 <!doctype html>
 <html lang="en">
@@ -24,13 +26,20 @@
         <a href="/show_formulario"><i class="bi bi-card-checklist"></i> Formularios</a>
         
         </li>
+
+        <li>
+          @if($lastFormId)
+              <a href="{{ route('form.latest') }}"><i class="bi bi-layout-text-window-reverse"></i> Formulario actual</a>
+          @else
+              <span><i class="bi bi-layout-text-window-reverse"></i> No hay formularios disponibles</span>
+          @endif
+      </li>
         <li>
         <a href="{{ route('form.create') }}"><i class="bi bi-input-cursor-text"></i></i> Crear Formulario</a>
         </li>
         <li>
         <a href="#"><i class="bi bi-bar-chart-line"></i></i> Respuestas</a>
         </li>
-
         </ul>
         <ul class="list-unstyled components">
             <li>

@@ -29,16 +29,21 @@ class usuariosController extends Controller
 
     public function registrar(Request $request){
         $usuario = new User;
-        $usuario->name = $request->nombreU; // Asumiendo que 'nombre' es la columna en tu tabla.
-        $usuario->email = $request->email; // Y que 'email' también es una columna.
+        $usuario->name = $request->nombreU;
+        $usuario->email = $request->email;
+        $usuario->cedula = $request->cedula; // Asegúrate de que estas columnas existen en tu tabla.
+        $usuario->agencia = $request->agencia;
+        $usuario->cuenta = $request->cuenta;
+        $usuario->telefono = $request->telefono;
+        $usuario->rol = $request->rol;
     
         // Guardar el nuevo usuario en la base de datos.
         $usuario->save();
     
         // Redirigir al usuario de vuelta a la página anterior.
         return response()->json(['success' => 'Usuario creado correctamente.']);
-
     }
+    
 
     public function eliminar($id) {
         $usuario = User::findOrFail($id);

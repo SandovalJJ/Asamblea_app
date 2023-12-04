@@ -11,8 +11,8 @@ class CreateFormResponsesTable extends Migration
         Schema::create('form_responses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('form_id')->constrained()->onDelete('cascade');
-            // Puedes añadir aquí campos adicionales según lo necesites
-            $table->json('response_data'); // Almacena los datos de respuesta en formato JSON
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Opcional, si estás rastreando qué usuario respondió
+            $table->json('response_data'); // Almacena las respuestas en formato JSON
             $table->timestamps();
         });
     }
