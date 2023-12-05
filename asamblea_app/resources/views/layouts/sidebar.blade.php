@@ -23,6 +23,9 @@ $lastFormId = \App\Models\Form::latest()->first()->id ?? null;
             <a href="/usuarios"><i class="bi bi-people"></i> Usuarios</a>
         </li>
         <li>
+          <a href="{{ route('form.create') }}"><i class="bi bi-input-cursor-text"></i></i> Crear Formulario</a>
+          </li>
+        <li>
         <a href="/show_formulario"><i class="bi bi-card-checklist"></i> Formularios</a>
         
         </li>
@@ -34,9 +37,7 @@ $lastFormId = \App\Models\Form::latest()->first()->id ?? null;
               <span><i class="bi bi-layout-text-window-reverse"></i> No hay formularios disponibles</span>
           @endif
       </li>
-        <li>
-        <a href="{{ route('form.create') }}"><i class="bi bi-input-cursor-text"></i></i> Crear Formulario</a>
-        </li>
+
         <li>
         <a href="#"><i class="bi bi-bar-chart-line"></i></i> Respuestas</a>
         </li>

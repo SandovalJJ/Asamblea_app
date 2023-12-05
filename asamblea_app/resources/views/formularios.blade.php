@@ -65,7 +65,7 @@
                             </div>
                             
                         </div>
-                        <button type="button" class="remove-field btn-danger">Eliminar Campo</button> <!-- Nuevo botón para eliminar campo -->
+                    
                     </div>
                 </div>
 
@@ -79,64 +79,53 @@
                 let select = fieldGroup.querySelector('.field-type');
                 let optionsContainer = fieldGroup.querySelector('.options-container');
                 let removeButton = fieldGroup.querySelector('.remove-option');
-                let removeFieldButton = fieldGroup.querySelector('.remove-field');
-
-                removeButton.addEventListener('click', function () {
-                    removeLastOption(optionsContainer);
-                });
-
-                removeFieldButton.addEventListener('click', function () {
-                    removeField(fieldGroup);
-                });
-
-                select.addEventListener('change', function () {
-                    if (this.value === 'multiple') {
-                        optionsContainer.style.display = 'block';
-                        if (optionsContainer.innerHTML.trim() === '') {
-                            addOptionInput(optionsContainer, fieldGroup);
+                    removeButton.addEventListener('click', function () {
+                        removeLastOption(optionsContainer);
+                    });
+                    select.addEventListener('change', function () {
+                        if (this.value === 'multiple') {
+                            optionsContainer.style.display = 'block';
+                            // Asegúrate de que los campos de opción dentro del contenedor tengan el atributo 'required'
+                            setOptionsRequired(optionsContainer, true);
+                            if (optionsContainer.innerHTML.trim() === '') {
+                                addOptionInput(optionsContainer, fieldGroup);
+                            }
+                        } else {
+                            optionsContainer.style.display = 'none';
+                            // Elimina el atributo 'required' de los campos de opción ocultos
+                            setOptionsRequired(optionsContainer, false);
                         }
-                    } else {
-                        optionsContainer.style.display = 'none';
-                    }
-                });
-
+                    });
+        
                 let addButton = fieldGroup.querySelector('.add-option');
                 addButton.addEventListener('click', function () {
                     addOptionInput(optionsContainer, fieldGroup);
                 });
             }
-
             function addOptionInput(optionsContainer, fieldGroup) {
-    let optionNumber = optionsContainer.getElementsByClassName('option-container').length + 1;
-    let optionDiv = document.createElement('div');
-    optionDiv.classList.add('option-container');
-
-    let optionLabel = document.createElement('label');
-    optionLabel.textContent = `Opción ${optionNumber}: `;
-    optionDiv.appendChild(optionLabel);
-
-    let newOption = document.createElement('input');
-    newOption.type = 'text';
-    newOption.required = true; // Agrega el atributo required
-    let fieldIndex = fieldGroup.querySelector('.field-type').name.match(/\d+/)[0];
-    newOption.name = `fields[${fieldIndex}][options][]`;
-
-    optionDiv.appendChild(newOption);
-    optionsContainer.appendChild(optionDiv);
-}
-
-
+                let optionNumber = optionsContainer.getElementsByClassName('option-container').length + 1;
+                let optionDiv = document.createElement('div');
+                optionDiv.classList.add('option-container');
+        
+                let optionLabel = document.createElement('label');
+                optionLabel.textContent = `Opción ${optionNumber}: `;
+                optionDiv.appendChild(optionLabel);
+        
+                let newOption = document.createElement('input');
+                newOption.type = 'text';
+                let fieldIndex = fieldGroup.querySelector('.field-type').name.match(/\d+/)[0];
+                newOption.name = `fields[${fieldIndex}][options][]`;
+        
+                optionDiv.appendChild(newOption);
+                optionsContainer.appendChild(optionDiv);
+            }
             function removeLastOption(optionsContainer) {
                 let options = optionsContainer.getElementsByClassName('option-container');
                 if (options.length > 1) {
                     optionsContainer.removeChild(options[options.length - 1]);
                 }
             }
-
-            function removeField(fieldGroup) {
-                fieldGroup.remove();
-            }
-
+        
             function createNewField(fieldIndex) {
                 let fieldGroup = document.createElement('div');
                 fieldGroup.className = 'form-group field-group';
@@ -149,36 +138,35 @@
                         <option value="multiple">Opción Múltiple</option>
                     </select>
                     <div class="options-container" style="display: none;">
-                        <label>Opciones:</label>
-                        <button type="button" class="add-option btn-warning">Añadir Opción</button>
-                        <button type="button" class="remove-option btn-danger">Eliminar Última Opción</button>
+                      <label>Opciones:</label>
+                    <button type="button" class="add-option  btn-warning">Añadir Opción</button>
+                    <button type="button" class="remove-option btn-danger">Eliminar Última Opción</button>
                         <div class="option-container">
-                            <label>Opción 1:</label>
+                            <label>Opción 1: </label>
                             <input type="text" name="fields[${fieldIndex}][options][]">
                         </div>
                     </div>
-                    <button type="button" class="remove-field btn-danger">Eliminar Campo</button> <!-- Nuevo botón para eliminar campo -->
                 `;
-
+        
                 return fieldGroup;
             }
-
+        
             document.addEventListener('DOMContentLoaded', function () {
                 let fieldCount = 1;
-
+        
                 document.querySelector('.add-field').addEventListener('click', function () {
                     let container = document.querySelector('.fields');
                     let newField = createNewField(fieldCount);
                     container.appendChild(newField);
                     initializeFieldEvents(newField);
-
+        
                     fieldCount++;
                 });
-
+        
                 // Aplicar la clase a la etiqueta de la primera pregunta
                 let firstFieldLabel = document.querySelector('.field-group label[for="fields[0][label]"]');
                 firstFieldLabel.classList.add('question-label');
-
+        
                 initializeFieldEvents(document.querySelector('.field-group'));
             });
         </script>

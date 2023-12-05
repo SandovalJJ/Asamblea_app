@@ -44,39 +44,49 @@
             <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
  
               <div class="registration-form">
-                <form id="registro-usuario">
+                <form id="registro-usuario" class="user-form">
                   @csrf
-                    <div class="form-group">
-                      <input type="text" class="form-control item" name="nombreU" id="nombreU" placeholder="Nombre">
+                    <div class="form-column">
+                        <div class="form-group">
+                          <label for="nombreU">Nombre</label>
+                          <input type="text" class="form-control item" name="nombreU" id="nombreU">
+                        </div>
+                        <div class="form-group">
+                          <label for="correo">Email</label>
+                          <input type="email" class="form-control item" name="email" id="correo">
+                        </div>
+                        <div class="form-group">
+                          <label for="cedula">Cédula</label>
+                          <input type="text" class="form-control item" name="cedula" id="cedula">
+                        </div>
+                    </div>
+                    <div class="form-column">
+                        <div class="form-group">
+                          <label for="agencia">Agencia</label>
+                          <input type="text" class="form-control item" name="agencia" id="agencia">
+                        </div>
+                        <div class="form-group">
+                          <label for="cuenta">Cuenta</label>
+                          <input type="text" class="form-control item" name="cuenta" id="cuenta">
+                        </div>
+                        <div class="form-group">
+                          <label for="telefono">Teléfono</label>
+                          <input type="text" class="form-control item" name="telefono" id="telefono">
+                        </div>
+                        <div class="form-group">
+                          <p>Selecciona un rol</p>
+                          <select class="form-control" name="rol" id="rol">
+                              <option value="DELEGADO">DELEGADO</option>
+                              <option value="SUPLENTE">SUPLENTE</option>
+                          </select>
+                      </div>
                     </div>
                     <div class="form-group">
-                      <input type="email" class="form-control item" name="email" id="correo" placeholder="Email">
+                      <button type="submit" class="btn btn-primary create-account">Crear usuario</button>
                     </div>
-                    
-                    <div class="form-group">
-                      <input type="text" class="form-control item" name="cedula" id="cedula" placeholder="Cédula">
-                  </div>
-                  <div class="form-group">
-                      <input type="text" class="form-control item" name="agencia" id="agencia" placeholder="Agencia">
-                  </div>
-                  <div class="form-group">
-                      <input type="text" class="form-control item" name="cuenta" id="cuenta" placeholder="Cuenta">
-                  </div>
-                  <div class="form-group">
-                      <input type="text" class="form-control item" name="telefono" id="telefono" placeholder="Teléfono">
-                  </div>
-                  <p>Selecciona un rol</p>
-                  <div class="form-group">
-                    <select class="form-control" name="rol" id="rol">
-                        <option value="DELEGADO">DELEGADO</option>
-                        <option value="SUPLENTE">SUPLENTE</option>
-                    </select>
-                </div>
-                  <div class="form-group">
-                    <button type="submit" class="btn btn-primary create-account">Crear usuario</button>
-                </div>
                 </form>
             </div>
+            
             </div>
           </div>
         </div>

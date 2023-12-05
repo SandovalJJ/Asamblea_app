@@ -44,4 +44,5 @@ Route::get('/show_formulario', [FormController::class, 'show'])->name('formulari
 Route::get('/asamblea', [FormController::class, 'showLatestForm'])->name('form.latest');
 Route::post('/form/answer/{formId}/{userId}', [FormController::class, 'saveResponse'])->name('form.save-response');
 
-Route::get('/respuestas/{formId}', [FormController::class, 'showResponses']);
+
+Route::get('/respuestas/{formId}', [FormController::class, 'mostrarRespuestas']);

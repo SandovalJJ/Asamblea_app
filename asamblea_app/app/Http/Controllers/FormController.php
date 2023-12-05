@@ -68,56 +68,76 @@ class FormController extends Controller
     }
 
     public function saveResponse(Request $request, $formId, $userId) {
-    // Obtén el formulario y el usuario
-    $form = Form::findOrFail($formId);
-    $user = User::findOrFail($userId);
-
-    // Recopila las respuestas del formulario
-    $response_data = [];
-
-    foreach ($form->fields as $field) {
-        $field_name = 'field_' . $field->id;
-        $response_data[$field_name] = $request->input($field_name);
+        // Obtén el formulario y el usuario
+        $form = Form::findOrFail($formId);
+        $user = User::findOrFail($userId);
+    
+        // Recopila las respuestas del formulario
+        $response_data = [];
+    
+        foreach ($form->fields as $field) {
+            $field_name = 'field_' . $field->id;
+            $response_data[$field_name] = $request->input($field_name);
+        }
+    
+        // Guarda la respuesta en la base de datos
+        FormResponse::create([
+            'form_id' => $formId,
+            'user_id' => $userId,
+            'response_data' => $response_data,
+        ]);
+    
+        return redirect()->back();
     }
+    
+    
 
-    // Guarda la respuesta en la base de datos
-    FormResponse::create([
-        'form_id' => $formId,
-        'user_id' => $userId,
-        'response_data' => $response_data,
-    ]);
-
-    return redirect()->back();
-    }
-
-    public function activate($id)
+    public function mostrarRespuestas($formId)
     {
-        $field = FormField::findOrFail($id);
-        $field->is_active = true;
-        $field->save();
+        $form = Form::with('fields')->findOrFail($formId);
+        $responses = FormResponse::where('form_id', $formId)->get();
+        $responseCounts = [];
+        $responsePercentages = [];
+        $totalUsers = User::count();
+        $formFields = $form->fields;
 
-        return response()->json(['message' => 'Pregunta activada con éxito']);
+        
+        foreach ($responses as $response) {
+            foreach ($response->response_data as $question => $answer) {
+                $answer = $answer ?? 'Sin respuesta';
+                $responseCounts[$question][$answer] = ($responseCounts[$question][$answer] ?? 0) + 1;
+            }
+        }
+
+        foreach ($responseCounts as $question => $answers) {
+            $totalAnswers = array_sum($answers);
+            foreach ($answers as $answer => $count) {
+                $percentage = $totalAnswers > 0 ? ($count / $totalAnswers) * 100 : 0;
+                $responsePercentages[$question][$answer] = number_format($percentage, 2);
+            }
+        }
+
+        // Conteos de votos por cada campo de formulario
+        foreach ($form->fields as $field) {
+            // Contar cuántos usuarios han votado por este campo específico
+            $votesCount = $responses->filter(function ($response) use ($field) {
+                return isset($response->response_data[$field->label]) && !is_null($response->response_data[$field->label]);
+            })->count();
+        
+            // Calcular los que no han votado
+            $noVotesCount = $totalUsers - $votesCount;
+        
+            // Agregar los conteos al array que se pasará a la vista
+            $responseCounts[$field->label] = array_merge(
+                $responseCounts[$field->label] ?? [],
+                ['votes' => $votesCount, 'no_votes' => $noVotesCount]
+            );
+        }
+        
+
+        return view('respuestas', compact('responsePercentages', 'responseCounts', 'formFields'));
     }
 
-    public function deactivate($id)
-    {
-        $field = FormField::findOrFail($id);
-        $field->is_active = false;
-        $field->save();
-
-        return response()->json(['message' => 'Pregunta desactivada con éxito']);
-    }
-
-public function showResponses($formId)
-{
-    // Obtén el formulario específico por su ID
-    $form = Form::with('fields')->findOrFail($formId);
-
-    // Obtén las respuestas asociadas a ese formulario
-    $responses = FormResponse::where('form_id', $formId)->with('user')->get();
-
-    return view('respuestas', compact('form', 'responses'));
-}
 
 
 }
