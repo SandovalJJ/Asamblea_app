@@ -42,28 +42,29 @@
                             <form action="{{ route('form.save-response', ['formId' => $latestForm->id, 'userId' => Auth::id()]) }}" method="POST">
                                 @csrf
                                 @foreach($latestForm->fields as $field)
-                                @if(Auth::user()->rol == 'admin' || $field->is_active)
-                                    <div class="mb-3">
-                                        <li>
-                                            <label style="color: black; font-size: 20px" class="form-label">{{ $field->label }}</label>
-                                        </li>
-                                        @if($field->type === 'multiple' || $field->type === 'yes_no')
-                                            @if(is_array($field->options))
-                                                @foreach($field->options as $option)
-                                                    <div class="form-check">
-                                                        <input type="radio" name="{{ 'field_' . $field->id }}" id="{{ 'field_' . $field->id . '_' . $loop->index }}" value="{{ $option }}">
-                                                        <label for="{{ 'field_' . $field->id . '_' . $loop->index }}">
-                                                            {{ $option }}
-                                                        </label>
-                                                    </div>
-                                                @endforeach
+                                    @if(Auth::user()->rol == 'admin' || $field->is_active)
+                                        <div class="mb-3">
+                                            <li>
+                                                <label style="color: black; font-size: 20px" class="form-label">{{ $field->label }}</label>
+                                            </li>
+                                            @if($field->type === 'multiple' || $field->type === 'yes_no')
+                                                @if(is_array($field->options))
+                                                    @foreach($field->options as $option)
+                                                        <div class="form-check">
+                                                            <input type="radio" name="{{ 'field_' . $field->id }}" id="{{ 'field_' . $field->id . '_' . $loop->index }}" value="{{ $option }}">
+                                                            <label for="{{ 'field_' . $field->id . '_' . $loop->index }}">
+                                                                {{ $option }}
+                                                            </label>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
                                             @endif
-                                        @endif
-                                    </div>
-                                @endif
-                            @endforeach
+                                        </div>
+                                    @endif
+                                @endforeach
                                 <button type="submit" class="btn btn-primary">Enviar Respuestas</button>
                             </form>
+                            
                         @else
                             <p>No se encontró el formulario.</p>
                         @endif

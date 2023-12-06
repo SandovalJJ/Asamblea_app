@@ -60,8 +60,8 @@
                             <button type="button" class="add-option btn-warning">Añadir Opción</button>
                             <button type="button" class="remove-option btn-danger">Eliminar Última Opción</button>
                             <div class="option-container">
-                                <label for="fields[${fieldIndex}][options][]">Opción 1:</label>
-                                <input type="text" name="fields[${fieldIndex}][options][]" required>
+                                <div class="option-container"><label>Opción 1: </label>
+                                    <input type="text" name="fields[0][options][]"></div>
                             </div>
                             
                         </div>
@@ -82,26 +82,25 @@
                     removeButton.addEventListener('click', function () {
                         removeLastOption(optionsContainer);
                     });
-                    select.addEventListener('change', function () {
-                        if (this.value === 'multiple') {
-                            optionsContainer.style.display = 'block';
-                            // Asegúrate de que los campos de opción dentro del contenedor tengan el atributo 'required'
-                            setOptionsRequired(optionsContainer, true);
-                            if (optionsContainer.innerHTML.trim() === '') {
-                                addOptionInput(optionsContainer, fieldGroup);
-                            }
-                        } else {
-                            optionsContainer.style.display = 'none';
-                            // Elimina el atributo 'required' de los campos de opción ocultos
-                            setOptionsRequired(optionsContainer, false);
+                
+                
+                select.addEventListener('change', function () {
+                    if (this.value === 'multiple') {
+                        optionsContainer.style.display = 'block';
+                        if (optionsContainer.innerHTML.trim() === '') {
+                            addOptionInput(optionsContainer, fieldGroup);
                         }
-                    });
+                    } else {
+                        optionsContainer.style.display = 'none';
+                    }
+                });
         
                 let addButton = fieldGroup.querySelector('.add-option');
                 addButton.addEventListener('click', function () {
                     addOptionInput(optionsContainer, fieldGroup);
                 });
             }
+        
             function addOptionInput(optionsContainer, fieldGroup) {
                 let optionNumber = optionsContainer.getElementsByClassName('option-container').length + 1;
                 let optionDiv = document.createElement('div');
@@ -139,8 +138,8 @@
                     </select>
                     <div class="options-container" style="display: none;">
                       <label>Opciones:</label>
-                    <button type="button" class="add-option  btn-warning">Añadir Opción</button>
-                    <button type="button" class="remove-option btn-danger">Eliminar Última Opción</button>
+        <button type="button" class="add-option  btn-warning">Añadir Opción</button>
+        <button type="button" class="remove-option btn-danger">Eliminar Última Opción</button>
                         <div class="option-container">
                             <label>Opción 1: </label>
                             <input type="text" name="fields[${fieldIndex}][options][]">

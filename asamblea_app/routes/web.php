@@ -46,3 +46,6 @@ Route::post('/form/answer/{formId}/{userId}', [FormController::class, 'saveRespo
 
 
 Route::get('/respuestas/{formId}', [FormController::class, 'mostrarRespuestas']);
+
+
+Route::get('/generar-grafico', [FormController::class, 'generarGrafico'])->name('grafico.generar');

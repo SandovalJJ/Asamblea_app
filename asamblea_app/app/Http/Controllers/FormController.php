@@ -77,7 +77,7 @@ class FormController extends Controller
     
         foreach ($form->fields as $field) {
             $field_name = 'field_' . $field->id;
-            $response_data[$field_name] = $request->input($field_name);
+            $response_data[$field->label] = $request->input($field_name);
         }
     
         // Guarda la respuesta en la base de datos
@@ -89,6 +89,7 @@ class FormController extends Controller
     
         return redirect()->back();
     }
+
     
     
 
@@ -139,5 +140,48 @@ class FormController extends Controller
     }
 
 
+    // prueba de generacion de graficos
+    public function generarGrafico() {
+        $datos = [50, 30, 20]; // Ejemplo de datos para el gráfico
+
+        $ancho = 400;
+        $alto = 300;
+        $imagen = imagecreatetruecolor($ancho, $alto);
+
+        // Colores
+        $fondo = imagecolorallocate($imagen, 255, 255, 255);
+        $negro = imagecolorallocate($imagen, 0, 0, 0);
+        $colores = [
+            imagecolorallocate($imagen, 220, 57, 18),
+            imagecolorallocate($imagen, 255, 153, 0),
+            imagecolorallocate($imagen, 51, 102, 204),
+        ];
+
+        // Fondo
+        imagefilledrectangle($imagen, 0, 0, $ancho, $alto, $fondo);
+
+        // Barras
+        $max_valor = max($datos);
+        $x = 50;
+        $ancho_barra = 40;
+        $espaciado = 30;
+
+        foreach ($datos as $indice => $valor) {
+            $altura = ($valor / $max_valor) * ($alto - 60);
+            imagefilledrectangle($imagen, $x, $alto - $altura - 30, $x + $ancho_barra, $alto - 30, $colores[$indice]);
+            $x += $ancho_barra + $espaciado;
+        }
+
+        // Borde
+        imagerectangle($imagen, 0, 0, $ancho - 1, $alto - 1, $negro);
+
+        // Guardar la imagen
+        $ruta_imagen = public_path('graficos/grafico.png');
+        imagepng($imagen, $ruta_imagen);
+        imagedestroy($imagen);
+
+        // Aquí puedes decidir si devuelves la ruta de la imagen o la descarga directamente
+        return response()->download($ruta_imagen);
+    }
 
 }

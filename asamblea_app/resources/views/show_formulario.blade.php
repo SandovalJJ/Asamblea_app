@@ -35,7 +35,7 @@
             <div class="container">
                 <h1>Lista de Formularios</h1>
                 @foreach($formularios as $formulario)
-                    <div class="card mb-3">
+                    <div class="card mb-3 shadow">
                         <div class="card-header">
                             <h2 data-bs-toggle="collapse" href="#collapse{{ $formulario->id }}" role="button" aria-expanded="false" aria-controls="collapse{{ $formulario->id }}">
                                 <i style="" class="bi bi-caret-down"></i> {{ $formulario->name }}
@@ -59,13 +59,17 @@
                                             @endif
                                         @endif
                                     </div>
+                                    
                                 @endforeach
                             </div>
                         </div>
+                        <div class="d-flex"><a href="/respuestas/{{$formulario->id}}" class="btn btn-primary w-25 fs-5 fw-semibold mx-auto mb-3 mt-3">Respuestas</a></div>
                     </div>
                 @endforeach
             </div>
         </div>
+        <a href="{{ route('grafico.generar') }}" class="btn btn-primary">Generar Gráfico</a>
+
         @extends('layouts.footer')
         @endsection
     </div>
