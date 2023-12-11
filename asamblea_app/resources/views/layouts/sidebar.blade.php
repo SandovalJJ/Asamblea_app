@@ -37,10 +37,6 @@ $lastFormId = \App\Models\Form::latest()->first()->id ?? null;
               <span><i class="bi bi-layout-text-window-reverse"></i> No hay formularios disponibles</span>
           @endif
       </li>
-
-        <li>
-        <a href="#"><i class="bi bi-bar-chart-line"></i></i> Respuestas</a>
-        </li>
         </ul>
         <ul class="list-unstyled components">
             <li>

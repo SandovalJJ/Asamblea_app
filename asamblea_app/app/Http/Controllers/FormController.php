@@ -6,6 +6,8 @@ use App\Models\Form;
 use App\Models\FormField;
 use App\Models\FormResponse;
 use App\Models\User;
+use Dompdf\Dompdf;
+use FPDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -101,8 +103,27 @@ class FormController extends Controller
         $responsePercentages = [];
         $totalUsers = User::count();
         $formFields = $form->fields;
+        $usersNotVotedByQuestion = [];
+        $allUsers = User::pluck('name', 'id');
+        $votesCountByQuestion = [];
 
-        
+        foreach ($form->fields as $field) {
+            // Contar cuántos usuarios han votado por esta pregunta específica
+            $votesCountByQuestion[$field->label] = $responses->filter(function ($response) use ($field) {
+                return isset($response->response_data[$field->label]) && !is_null($response->response_data[$field->label]);
+            })->count();
+        }
+
+        foreach ($form->fields as $field) {
+            // IDs de usuarios que han respondido a esta pregunta
+            $respondedUserIds = $responses->filter(function ($response) use ($field) {
+                return isset($response->response_data[$field->label]);
+            })->pluck('user_id')->unique();
+    
+            // Usuarios que no han respondido a esta pregunta
+            $usersNotVotedByQuestion[$field->label] = $allUsers->except($respondedUserIds)->values();
+        }
+
         foreach ($responses as $response) {
             foreach ($response->response_data as $question => $answer) {
                 $answer = $answer ?? 'Sin respuesta';
@@ -136,7 +157,7 @@ class FormController extends Controller
         }
         
 
-        return view('respuestas', compact('responsePercentages', 'responseCounts', 'formFields'));
+        return view('respuestas', compact('responsePercentages', 'responseCounts', 'formFields', 'usersNotVotedByQuestion', 'votesCountByQuestion', 'form'));
     }
 
 
@@ -184,4 +205,73 @@ class FormController extends Controller
         return response()->download($ruta_imagen);
     }
 
+    public function generarPDF($formId)
+{
+    $form = Form::with('fields')->findOrFail($formId);
+    $responses = FormResponse::where('form_id', $formId)->get();
+    $responseCounts = [];
+    $responsePercentages = [];
+    $totalUsers = User::count();
+    $formFields = $form->fields;
+    $usersNotVotedByQuestion = [];
+    $allUsers = User::pluck('name', 'id');
+    $votesCountByQuestion = [];
+
+    foreach ($form->fields as $field) {
+        // Contar cuántos usuarios han votado por esta pregunta específica
+        $votesCountByQuestion[$field->label] = $responses->filter(function ($response) use ($field) {
+            return isset($response->response_data[$field->label]) && !is_null($response->response_data[$field->label]);
+        })->count();
+    }
+
+    foreach ($form->fields as $field) {
+        // IDs de usuarios que han respondido a esta pregunta
+        $respondedUserIds = $responses->filter(function ($response) use ($field) {
+            return isset($response->response_data[$field->label]);
+        })->pluck('user_id')->unique();
+
+        // Usuarios que no han respondido a esta pregunta
+        $usersNotVotedByQuestion[$field->label] = $allUsers->except($respondedUserIds)->values();
+    }
+
+    // Resto de tu código para calcular las respuestas y los votos...
+
+    // Crear una nueva instancia de FPDF
+    $pdf = new FPDF();
+    $pdf->AddPage();
+
+    // Configura el formato y estilo del PDF
+    $pdf->SetFont('Helvetica', '', 12);
+    $pdf->SetAutoPageBreak(true, 10);
+
+    // Agrega contenido al PDF basado en los datos obtenidos
+    foreach ($formFields as $field) {
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, utf8_decode($field->label));
+        $pdf->Ln(10);
+
+        // Agrega los porcentajes de respuestas
+        if (isset($responsePercentages[$field->label])) {
+            foreach ($responsePercentages[$field->label] as $answer => $percentage) {
+                $pdf->MultiCell(0, 10, utf8_decode($answer . ': ' . $percentage . '%'));
+                $pdf->Ln(10);
+            }
+        }
+
+        // Agrega el número de votos
+        $pdf->MultiCell(0, 10, utf8_decode('Número de votos: ' . ($votesCountByQuestion[$field->label] ?? 0)));
+        $pdf->Ln(10);
+
+        // Agrega los usuarios que faltan por votar
+        $pdf->MultiCell(0, 10, utf8_decode('Personas que faltan por votar en esta pregunta:'));
+        $pdf->Ln(10);
+        foreach ($usersNotVotedByQuestion[$field->label] ?? [] as $userName) {
+            $pdf->MultiCell(0, 10, utf8_decode($userName));
+            $pdf->Ln(10);
+        }
+    }
+
+    // Descarga el PDF
+    $pdf->Output('resultado_formulario.pdf', 'D');
+}
 }

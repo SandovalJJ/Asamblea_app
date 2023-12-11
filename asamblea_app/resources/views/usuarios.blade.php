@@ -108,12 +108,9 @@
     </div>
   </div>
 </div>
-
 		</div>
-
     @extends('layouts.footer')
     <script>
-
       $(document).ready(function(){
     var user = $('#tabla-usuarios').DataTable({
         responsive: true,
@@ -134,7 +131,6 @@
             url: "//cdn.datatables.net/plug-ins/1.10.20/i18n/Spanish.json"
         }
     });
-
       })
       </script>
     <script>
