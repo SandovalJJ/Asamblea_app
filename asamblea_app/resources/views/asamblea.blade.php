@@ -64,25 +64,27 @@
         @extends('layouts.sidebar')
         @section('content')
         <div id="content" class="p-4 p-md-5">
-            <button type="button" id="sidebarCollapse" class="btn btn-primary">
+            <button type="button" id="sidebarCollapse" class="btn btn-primary mb-3">
                 <i class="fa fa-bars"></i>
             </button>
+            <br>
             @auth
                 @if(Auth::user()->rol == 'admin')
+                
+                @if (session('error'))
+                <div class="alert alert-warning">
+                    {{ session('error') }}
+                </div>
+            @endif
+            @if (session('success'))
+                <div class="alert alert-warning">
+                    {{ session('success') }}
+                </div>
+            @endif
             <div class="container">
                 <div class="container">
                     <br>
 
-                    @if (session('error'))
-                        <div class="alert alert-warning">
-                            {{ session('error') }}
-                        </div>
-                    @endif
-                    @if (session('success'))
-                        <div class="alert alert-warning">
-                            {{ session('success') }}
-                        </div>
-                    @endif
                 <div class="container">
                     <div>
                         @if(!$hasVoted)
@@ -122,16 +124,13 @@
             </div>
             @endif
             @if(in_array(Auth::user()->rol, ['DELEGADO', 'suplente']))
-            <div class="container">
-                <!-- Mensajes de alerta -->
-                @if (session('error'))
-                    <div class="alert alert-warning">{{ session('error') }}</div>
+            @if (session('error'))
+            <div class="alert alert-warning">{{ session('error') }}</div>
                 @endif
                 @if (session('success'))
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
-            
-                <!-- Contenido del formulario -->
+            <div class="container">
 
                 <div class="form-container">
                     @if(!$hasVoted)
@@ -157,7 +156,7 @@
                     @else
                         <div class="alert alert-info">Ya has votado en este campo.</div>
                         <div class="mb-3">
-                            <label class="form-label" style="font-size: 50px; color: black; font-weight: bold">{{ $currentForm->name }}</label>
+                            <h2 style="font-size: 50px; color: black; font-weight: bold; text-align: center" class="form-title">{{ $currentForm->name }}</h2>
                             <br>
                             <label class="form-label" style="font-size: 35px; color: black;">{{ $field->label }}</label>
                             @if($field->type === 'multiple' || $field->type === 'yes_no')
