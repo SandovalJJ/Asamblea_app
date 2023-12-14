@@ -63,7 +63,7 @@
                                 @endforeach
                             </div>
                         </div>
-                        <div class="d-flex"><a href="/respuestas/{{$formulario->id}}" class="btn btn-primary w-25 fs-5 fw-semibold mx-auto mb-3 mt-3">Respuestas</a></div>
+                        <div class="d-flex"><a href="/respuestas-{{$formulario->id}}" class="btn btn-primary w-25 fs-5 fw-semibold mx-auto mb-3 mt-3">Respuestas</a></div>
                     </div>
                 @endforeach
             </div>

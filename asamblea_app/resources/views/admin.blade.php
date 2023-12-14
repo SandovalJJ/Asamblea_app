@@ -18,7 +18,8 @@
 
 
 
-        <h2 class="mb-4">Sidebar #01</h2>
+        <h2 class="mb-4">Bienvenido al software de asamblea</h2>
+        <p></p>
       
       </div>
 		</div>

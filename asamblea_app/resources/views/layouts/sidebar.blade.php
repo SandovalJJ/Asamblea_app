@@ -1,6 +1,9 @@
 @php
-$lastFormId = \App\Models\Form::latest()->first()->id ?? null;
+$lastForm = \App\Models\Form::latest()->first();
+$lastFormId = $lastForm ? $lastForm->id : null;
+$firstFieldIndex = $lastForm ? 1 : null; // Asumir que el primer campo tiene índice 1
 @endphp
+
 
 <!doctype html>
 <html lang="en">
@@ -17,7 +20,8 @@ $lastFormId = \App\Models\Form::latest()->first()->id ?? null;
         <ul class="list-unstyled components mb-5">
         <li >
             <a href="/admin" ><i class="bi bi-house"></i> Inicio</a>
-            
+            @auth
+    @if(Auth::user()->rol == 'admin')
         </li>
         <li>
             <a href="/usuarios"><i class="bi bi-people"></i> Usuarios</a>
@@ -29,14 +33,20 @@ $lastFormId = \App\Models\Form::latest()->first()->id ?? null;
         <a href="/show_formulario"><i class="bi bi-card-checklist"></i> Formularios</a>
         
         </li>
+        @endif
+        @if(in_array(Auth::user()->rol, ['DELEGADO', 'SUPLENTE','admin']))
+
 
         <li>
-          @if($lastFormId)
-              <a href="{{ route('form.latest') }}"><i class="bi bi-layout-text-window-reverse"></i> Formulario actual</a>
+          @if($lastFormId && $firstFieldIndex)
+              <a href="{{ route('form.show-field', ['formId' => $lastFormId, 'fieldIndex' => $firstFieldIndex]) }}"><i class="bi bi-layout-text-window-reverse"></i> Formulario actual</a>
           @else
               <span><i class="bi bi-layout-text-window-reverse"></i> No hay formularios disponibles</span>
           @endif
+          @endif
+          @endauth
       </li>
+      
         </ul>
         <ul class="list-unstyled components">
             <li>
@@ -54,7 +64,6 @@ $lastFormId = \App\Models\Form::latest()->first()->id ?? null;
     @yield('content')
   </div>
 </div>
-
 @include('layouts.footer')
 </body>
 </html>

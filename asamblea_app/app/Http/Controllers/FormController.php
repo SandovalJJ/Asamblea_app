@@ -10,6 +10,7 @@ use Dompdf\Dompdf;
 use FPDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class FormController extends Controller
 {
@@ -57,108 +58,123 @@ class FormController extends Controller
         $formularios = Form::with('fields')->get();
         return view('show_formulario', compact('formularios'));
     }
-
-    public function showLatestForm()
+    
+    public function showFieldByIndex($formId, $fieldIndex)
     {
-        $latestForm = Form::with('fields')->latest()->first();
-
-        if (!$latestForm) {
-            return redirect()->back()->with('error', 'No hay formularios disponibles.');
+        $currentForm = Form::find($formId);
+        $userId = Auth::id();
+        $userRole = Auth::user()->rol; // Obtiene el rol del usuario actual
+    
+        $form = Form::with(['fields' => function($query) use ($fieldIndex) {
+            $query->skip($fieldIndex - 1)->take(1);
+        }])->findOrFail($formId);
+    
+        if ($form->fields->isEmpty()) {
+            return redirect()->back()->with('error', 'No hay más preguntas en el formulario.');
         }
-
-        return view('asamblea', compact('latestForm'));
+    
+        $field = $form->fields->first();
+    
+        // Verificar si el campo está activo. Si el usuario no es admin y el campo está inactivo, redirigir.
+        if ($userRole !== 'admin' && !$field->is_active) {
+            return redirect()->back()->with('error', 'La siguiente pregunta aún no está habilitada, por favor espere a que el administrador la habilite.');
+        }
+    
+        $fieldId = 'field_' . $field->id;
+    
+        // Verificar si el usuario ya ha respondido a este campo
+        $response = FormResponse::where('form_id', $formId)
+                                ->where('user_id', $userId)
+                                ->first();
+    
+        $hasVoted = $response && isset($response->response_data[$fieldId]);
+    
+        return view('asamblea', compact('form', 'field', 'fieldIndex', 'hasVoted', 'currentForm'));
     }
+    
 
-    public function saveResponse(Request $request, $formId, $userId) {
-        // Obtén el formulario y el usuario
-        $form = Form::findOrFail($formId);
-        $user = User::findOrFail($userId);
+
     
-        // Recopila las respuestas del formulario
-        $response_data = [];
+
+
+    public function saveResponse(Request $request, $formId)
+    {
+        $userId = Auth::id();
     
-        foreach ($form->fields as $field) {
-            $field_name = 'field_' . $field->id;
-            $response_data[$field->label] = $request->input($field_name);
-        }
-    
-        // Guarda la respuesta en la base de datos
-        FormResponse::create([
+        // Buscar una respuesta existente específicamente para este formulario y usuario
+        $response = FormResponse::firstOrNew([
             'form_id' => $formId,
-            'user_id' => $userId,
-            'response_data' => $response_data,
+            'user_id' => $userId
         ]);
     
-        return redirect()->back();
+        // Recuperar los datos existentes o inicializar un arreglo vacío si es nuevo
+        $responseData = $response->response_data ?? [];
+    
+        // Añadir o actualizar la respuesta para cada campo del formulario
+        foreach ($request->except(['_token']) as $fieldId => $answer) {
+            $responseData[$fieldId] = $answer;
+        }
+    
+        $response->response_data = $responseData;
+        $response->save();
+    
+        return redirect()->back()->with('success', 'Respuesta guardada correctamente');
     }
-
-    
     
 
+    
+
+    
     public function mostrarRespuestas($formId)
-    {
-        $form = Form::with('fields')->findOrFail($formId);
-        $responses = FormResponse::where('form_id', $formId)->get();
-        $responseCounts = [];
-        $responsePercentages = [];
-        $totalUsers = User::count();
-        $formFields = $form->fields;
-        $usersNotVotedByQuestion = [];
-        $allUsers = User::pluck('name', 'id');
-        $votesCountByQuestion = [];
+{
+    $form = Form::with('fields')->findOrFail($formId);
+    $responses = FormResponse::where('form_id', $formId)->get();
+    $totalUsers = User::count();
+    $allUsers = User::pluck('name', 'id');
+    $formFields = $form->fields; // Variable que almacena los campos del formulario
 
-        foreach ($form->fields as $field) {
-            // Contar cuántos usuarios han votado por esta pregunta específica
-            $votesCountByQuestion[$field->label] = $responses->filter(function ($response) use ($field) {
-                return isset($response->response_data[$field->label]) && !is_null($response->response_data[$field->label]);
-            })->count();
-        }
+    // Inicialización de variables para almacenar los resultados
+    $responseCounts = [];
+    $responsePercentages = [];
+    $usersNotVotedByQuestion = [];
+    $votesCountByQuestion = [];
 
-        foreach ($form->fields as $field) {
-            // IDs de usuarios que han respondido a esta pregunta
-            $respondedUserIds = $responses->filter(function ($response) use ($field) {
-                return isset($response->response_data[$field->label]);
-            })->pluck('user_id')->unique();
-    
-            // Usuarios que no han respondido a esta pregunta
-            $usersNotVotedByQuestion[$field->label] = $allUsers->except($respondedUserIds)->values();
-        }
+    foreach ($formFields as $field) {
+        $fieldKey = 'field_' . $field->id;
+        Log::info("Procesando campo: " . $fieldKey);
+
+        // Conteo de votos y usuarios que no votaron por cada pregunta
+        $votesCount = 0;
+        $respondedUserIds = [];
 
         foreach ($responses as $response) {
-            foreach ($response->response_data as $question => $answer) {
-                $answer = $answer ?? 'Sin respuesta';
-                $responseCounts[$question][$answer] = ($responseCounts[$question][$answer] ?? 0) + 1;
+            if (isset($response->response_data[$fieldKey])) {
+                $votesCount++;
+                $respondedUserIds[] = $response->user_id;
+                $answer = $response->response_data[$fieldKey] ?? 'Sin respuesta';
+                Log::info("Respuesta para {$fieldKey}: {$answer}");
+                $responseCounts[$fieldKey][$answer] = ($responseCounts[$fieldKey][$answer] ?? 0) + 1;
             }
         }
 
-        foreach ($responseCounts as $question => $answers) {
-            $totalAnswers = array_sum($answers);
-            foreach ($answers as $answer => $count) {
+        $votesCountByQuestion[$fieldKey] = $votesCount;
+        $usersNotVotedByQuestion[$fieldKey] = $allUsers->except($respondedUserIds)->values();
+
+        // Cálculo de porcentajes de respuesta
+        if (isset($responseCounts[$fieldKey])) {
+            $totalAnswers = array_sum($responseCounts[$fieldKey]);
+            foreach ($responseCounts[$fieldKey] as $answer => $count) {
                 $percentage = $totalAnswers > 0 ? ($count / $totalAnswers) * 100 : 0;
-                $responsePercentages[$question][$answer] = number_format($percentage, 2);
+                $responsePercentages[$fieldKey][$answer] = number_format($percentage, 2);
             }
         }
-
-        // Conteos de votos por cada campo de formulario
-        foreach ($form->fields as $field) {
-            // Contar cuántos usuarios han votado por este campo específico
-            $votesCount = $responses->filter(function ($response) use ($field) {
-                return isset($response->response_data[$field->label]) && !is_null($response->response_data[$field->label]);
-            })->count();
-        
-            // Calcular los que no han votado
-            $noVotesCount = $totalUsers - $votesCount;
-        
-            // Agregar los conteos al array que se pasará a la vista
-            $responseCounts[$field->label] = array_merge(
-                $responseCounts[$field->label] ?? [],
-                ['votes' => $votesCount, 'no_votes' => $noVotesCount]
-            );
-        }
-        
-
-        return view('respuestas', compact('responsePercentages', 'responseCounts', 'formFields', 'usersNotVotedByQuestion', 'votesCountByQuestion', 'form'));
     }
+
+    return view('respuestas', compact('responsePercentages', 'responseCounts', 'formFields', 'usersNotVotedByQuestion', 'votesCountByQuestion', 'form'));
+}
+
+    
+    
 
 
     // prueba de generacion de graficos
@@ -206,72 +222,82 @@ class FormController extends Controller
     }
 
     public function generarPDF($formId)
-{
-    $form = Form::with('fields')->findOrFail($formId);
-    $responses = FormResponse::where('form_id', $formId)->get();
-    $responseCounts = [];
-    $responsePercentages = [];
-    $totalUsers = User::count();
-    $formFields = $form->fields;
-    $usersNotVotedByQuestion = [];
-    $allUsers = User::pluck('name', 'id');
-    $votesCountByQuestion = [];
+    {
+        $form = Form::with('fields')->findOrFail($formId);
+        $responses = FormResponse::where('form_id', $formId)->get();
+        $responseCounts = [];
+        $responsePercentages = [];
+        $totalUsers = User::count();
+        $formFields = $form->fields;
+        $usersNotVotedByQuestion = [];
+        $allUsers = User::pluck('name', 'id');
+        $votesCountByQuestion = [];
 
-    foreach ($form->fields as $field) {
-        // Contar cuántos usuarios han votado por esta pregunta específica
-        $votesCountByQuestion[$field->label] = $responses->filter(function ($response) use ($field) {
-            return isset($response->response_data[$field->label]) && !is_null($response->response_data[$field->label]);
-        })->count();
-    }
+        foreach ($form->fields as $field) {
+            // Contar cuántos usuarios han votado por esta pregunta específica
+            $votesCountByQuestion[$field->label] = $responses->filter(function ($response) use ($field) {
+                return isset($response->response_data[$field->label]) && !is_null($response->response_data[$field->label]);
+            })->count();
+        }
 
-    foreach ($form->fields as $field) {
-        // IDs de usuarios que han respondido a esta pregunta
-        $respondedUserIds = $responses->filter(function ($response) use ($field) {
-            return isset($response->response_data[$field->label]);
-        })->pluck('user_id')->unique();
+        foreach ($form->fields as $field) {
+            // IDs de usuarios que han respondido a esta pregunta
+            $respondedUserIds = $responses->filter(function ($response) use ($field) {
+                return isset($response->response_data[$field->label]);
+            })->pluck('user_id')->unique();
 
-        // Usuarios que no han respondido a esta pregunta
-        $usersNotVotedByQuestion[$field->label] = $allUsers->except($respondedUserIds)->values();
-    }
+            // Usuarios que no han respondido a esta pregunta
+            $usersNotVotedByQuestion[$field->label] = $allUsers->except($respondedUserIds)->values();
+        }
 
-    // Resto de tu código para calcular las respuestas y los votos...
+        // Resto de tu código para calcular las respuestas y los votos...
 
-    // Crear una nueva instancia de FPDF
-    $pdf = new FPDF();
-    $pdf->AddPage();
+        // Crear una nueva instancia de FPDF
+        $pdf = new FPDF();
+        $pdf->AddPage();
 
-    // Configura el formato y estilo del PDF
-    $pdf->SetFont('Helvetica', '', 12);
-    $pdf->SetAutoPageBreak(true, 10);
+        // Configura el formato y estilo del PDF
+        $pdf->SetFont('Helvetica', '', 12);
+        $pdf->SetAutoPageBreak(true, 10);
 
-    // Agrega contenido al PDF basado en los datos obtenidos
-    foreach ($formFields as $field) {
-        $pdf->Ln(10);
-        $pdf->MultiCell(0, 10, utf8_decode($field->label));
-        $pdf->Ln(10);
+        // Agrega contenido al PDF basado en los datos obtenidos
+        foreach ($formFields as $field) {
+            $pdf->Ln(10);
+            $pdf->MultiCell(0, 10, utf8_decode($field->label));
+            $pdf->Ln(10);
 
-        // Agrega los porcentajes de respuestas
-        if (isset($responsePercentages[$field->label])) {
-            foreach ($responsePercentages[$field->label] as $answer => $percentage) {
-                $pdf->MultiCell(0, 10, utf8_decode($answer . ': ' . $percentage . '%'));
+            // Agrega los porcentajes de respuestas
+            if (isset($responsePercentages[$field->label])) {
+                foreach ($responsePercentages[$field->label] as $answer => $percentage) {
+                    $pdf->MultiCell(0, 10, utf8_decode($answer . ': ' . $percentage . '%'));
+                    $pdf->Ln(10);
+                }
+            }
+
+            // Agrega el número de votos
+            $pdf->MultiCell(0, 10, utf8_decode('Número de votos: ' . ($votesCountByQuestion[$field->label] ?? 0)));
+            $pdf->Ln(10);
+
+            // Agrega los usuarios que faltan por votar
+            $pdf->MultiCell(0, 10, utf8_decode('Personas que faltan por votar en esta pregunta:'));
+            $pdf->Ln(10);
+            foreach ($usersNotVotedByQuestion[$field->label] ?? [] as $userName) {
+                $pdf->MultiCell(0, 10, utf8_decode($userName));
                 $pdf->Ln(10);
             }
         }
 
-        // Agrega el número de votos
-        $pdf->MultiCell(0, 10, utf8_decode('Número de votos: ' . ($votesCountByQuestion[$field->label] ?? 0)));
-        $pdf->Ln(10);
-
-        // Agrega los usuarios que faltan por votar
-        $pdf->MultiCell(0, 10, utf8_decode('Personas que faltan por votar en esta pregunta:'));
-        $pdf->Ln(10);
-        foreach ($usersNotVotedByQuestion[$field->label] ?? [] as $userName) {
-            $pdf->MultiCell(0, 10, utf8_decode($userName));
-            $pdf->Ln(10);
-        }
+        // Descarga el PDF
+        $pdf->Output('resultado_formulario.pdf', 'D');
     }
 
-    // Descarga el PDF
-    $pdf->Output('resultado_formulario.pdf', 'D');
+    public function toggleActive($fieldId)
+        {
+            $field = FormField::findOrFail($fieldId);
+            $field->is_active = !$field->is_active;
+            $field->save();
+
+            return redirect()->back()->with('success', 'Estado cambiado correctamente.');
+        }
 }
-}
+

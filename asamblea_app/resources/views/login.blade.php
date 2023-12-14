@@ -26,7 +26,7 @@
                 </div>
                 @endif
 
-              <h3 class="login-heading mb-4">¡Bienvenido de nuevo!</h3>
+              <h3 class="login-heading mb-4">¡Bienvenido al software de asamblea!</h3>
               <form action="{{route('iniciar')}}" method="POST">
                 @csrf
                 <div class="form-floating mb-3">
