@@ -15,7 +15,8 @@
               <i class="fa fa-bars"></i>
             </button>
       <div id="content" class="p-4 p-md-5">
-
+        @auth
+        @if(Auth::user()->rol == 'admin')
         <h2 class="mb-4">¡Bienvenid@ al software de asamblea, {{ Auth::user()->name }}!</h2>
         <div id="content" class="">
           <nav>
@@ -108,6 +109,8 @@
     </div>
   </div>
 </div>
+@endif
+@endauth
 		</div>
     @extends('layouts.footer')
     <script>

@@ -117,7 +117,7 @@
                     @endif
                         <br>
                     </div>
-                    <a style="font-size:20px; margin-right:25px; display: inline-block;" href="{{ route('form.show-field', ['formId' => $form->id, 'fieldIndex' => $fieldIndex - 1]) }}"><i class="bi bi-arrow-left-short"></i>Pregunta Anterior </a>
+                    <a style="font-size:20px; margin-right:25px; display: inline-block; color: black" href="{{ route('form.show-field', ['formId' => $form->id, 'fieldIndex' => $fieldIndex - 1]) }}"><i class="bi bi-arrow-left-short"></i>Pregunta Anterior </a>
                     <a style="font-size:20px; margin-right:25px; display: inline-block; color: black" href="{{ route('form.show-field', ['formId' => $form->id, 'fieldIndex' => $fieldIndex + 1]) }}">Siguiente Pregunta <i class="bi bi-arrow-right-short"></i></a>
                     </div>
                 </div>

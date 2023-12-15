@@ -49,6 +49,8 @@
     @extends('layouts.head')
 </head>
 <body>
+    @auth
+    @if(Auth::user()->rol == 'admin')
     <div class="wrapper d-flex align-items-stretch">
         @extends('layouts.sidebar')
         @section('content')
@@ -98,5 +100,7 @@
         @extends('layouts.footer')
         @endsection
     </div>
+    @endif
+    @endauth
 </body>
 </html>

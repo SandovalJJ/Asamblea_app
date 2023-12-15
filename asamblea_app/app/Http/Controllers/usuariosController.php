@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\DataTables;
 
 class usuariosController extends Controller
@@ -26,16 +27,23 @@ class usuariosController extends Controller
     }
         return view('usuarios');
     }
+ 
 
     public function registrar(Request $request){
         $usuario = new User;
         $usuario->name = $request->nombreU;
         $usuario->email = $request->email;
-        $usuario->cedula = $request->cedula; // Asegúrate de que estas columnas existen en tu tabla.
+        $usuario->cedula = $request->cedula;
         $usuario->agencia = $request->agencia;
         $usuario->cuenta = $request->cuenta;
         $usuario->telefono = $request->telefono;
         $usuario->rol = $request->rol;
+        
+        // Generar una contraseña encriptada a partir de la cédula del usuario.
+        $password = Hash::make($request->cedula);
+        
+        // Asignar la contraseña encriptada al campo de contraseña.
+        $usuario->password = $password;
     
         // Guardar el nuevo usuario en la base de datos.
         $usuario->save();
@@ -43,6 +51,7 @@ class usuariosController extends Controller
         // Redirigir al usuario de vuelta a la página anterior.
         return response()->json(['success' => 'Usuario creado correctamente.']);
     }
+    
     
 
     public function eliminar($id) {

@@ -27,8 +27,11 @@
 </head>
 <body>
 <div class="wrapper d-flex align-items-stretch">
+
     @extends('layouts.sidebar')
     @section('content')
+    @auth
+    @if(Auth::user()->rol == 'admin')
     <button type="button" id="sidebarCollapse" class="btn btn-primary">
         <i class="fa fa-bars"></i>
     </button>
@@ -73,7 +76,8 @@
                 <button type="submit" class="btn btn-primary">Guardar Formulario</button>
             </form>
         </div>
-
+@endif
+@endauth
         <script>
             function initializeFieldEvents(fieldGroup) {
                 let select = fieldGroup.querySelector('.field-type');

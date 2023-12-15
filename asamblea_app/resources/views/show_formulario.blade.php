@@ -54,6 +54,8 @@
                 {{ session('error') }}
             </div>
         @endif
+        @auth
+        @if(Auth::user()->rol == 'admin')
             <button type="button" id="sidebarCollapse" class="btn btn-primary">
                 <i class="fa fa-bars"></i>
               </button>
@@ -164,7 +166,8 @@
                 @endforeach
             </div>
         </div>
-
+@endif
+@endauth
 
         @extends('layouts.footer')
         <script>
