@@ -16,4 +16,9 @@ class Form extends Model
     {
         return $this->hasMany(FormResponse::class);
     }
+    public function assignedUsers()
+{
+    return $this->belongsToMany(User::class, 'form_user');
+}
+
 }

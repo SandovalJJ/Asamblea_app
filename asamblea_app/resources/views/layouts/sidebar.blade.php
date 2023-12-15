@@ -35,18 +35,23 @@ $firstFieldIndex = $lastForm ? 1 : null; // Asumir que el primer campo tiene ín
         </li>
         @endif
         @if(in_array(Auth::user()->rol, ['DELEGADO', 'SUPLENTE','admin']))
-
-
         <li>
           @if($lastFormId && $firstFieldIndex)
-              <a href="{{ route('form.show-field', ['formId' => $lastFormId, 'fieldIndex' => $firstFieldIndex]) }}"><i class="bi bi-layout-text-window-reverse"></i> Formulario actual</a>
+              @php
+                  $isUserAssigned = \App\Models\Form::find($lastFormId)->assignedUsers->contains(Auth::id());
+              @endphp
+              @if(Auth::user()->rol === 'admin' || $isUserAssigned)
+
+                  <a href="{{ route('form.show-field', ['formId' => $lastFormId, 'fieldIndex' => $firstFieldIndex]) }}"><i class="bi bi-layout-text-window-reverse"></i> Formulario actual</a>
+              @else
+                  <span><i class="bi bi-layout-text-window-reverse"></i> No estás asignado a ningún formulario actualmente</span>
+              @endif
           @else
               <span><i class="bi bi-layout-text-window-reverse"></i> No hay formularios disponibles</span>
           @endif
-          @endif
-          @endauth
       </li>
-      
+      @endif
+      @endauth
         </ul>
         <ul class="list-unstyled components">
             <li>
@@ -58,8 +63,11 @@ $firstFieldIndex = $lastForm ? 1 : null; // Asumir que el primer campo tiene ín
                 </form>
             </li>
         </ul>
+
     </div>
+    
     </nav>
+    
 <div id="content" class="p-4 p-md-5">
     @yield('content')
   </div>

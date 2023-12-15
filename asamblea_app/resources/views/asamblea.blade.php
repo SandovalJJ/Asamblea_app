@@ -108,7 +108,7 @@
                                 @endif
                             </div>
                             <a  href="{{ route('form-field.toggle-active', $field->id) }}" class="btn btn-warning">
-                                {{ $field->is_active ? 'Desactivar' : 'Activar' }} Campo
+                                {{ $field->is_active ? 'Desactivar' : 'Activar' }} Pregunta
                             </a>
 
                         </form>
@@ -118,12 +118,12 @@
                         <br>
                     </div>
                     <a style="font-size:20px; margin-right:25px; display: inline-block;" href="{{ route('form.show-field', ['formId' => $form->id, 'fieldIndex' => $fieldIndex - 1]) }}"><i class="bi bi-arrow-left-short"></i>Pregunta Anterior </a>
-                    <a style="font-size:20px; margin-right:25px; display: inline-block;" href="{{ route('form.show-field', ['formId' => $form->id, 'fieldIndex' => $fieldIndex + 1]) }}">Siguiente Pregunta <i class="bi bi-arrow-right-short"></i></a>
+                    <a style="font-size:20px; margin-right:25px; display: inline-block; color: black" href="{{ route('form.show-field', ['formId' => $form->id, 'fieldIndex' => $fieldIndex + 1]) }}">Siguiente Pregunta <i class="bi bi-arrow-right-short"></i></a>
                     </div>
                 </div>
             </div>
             @endif
-            @if(in_array(Auth::user()->rol, ['DELEGADO', 'suplente']))
+            @if(in_array(Auth::user()->rol, ['DELEGADO', 'SUPLENTE']))
             @if (session('error'))
             <div class="alert alert-warning">{{ session('error') }}</div>
                 @endif
@@ -163,8 +163,8 @@
                                 @if(is_array($field->options))
                                     @foreach($field->options as $option)
                                         <div class="form-check">
-                                            <p type="radio" name="{{ 'field_' . $field->id }}" id="{{ 'field_' . $field->id . '_' . $loop->index }}" value="{{ $option }}">
-                                            <label style="font-size: 25px" for="{{ 'field_' . $field->id . '_' . $loop->index }}">
+                                            <p style="color: black" type="radio" name="{{ 'field_' . $field->id }}" id="{{ 'field_' . $field->id . '_' . $loop->index }}" value="{{ $option }}">
+                                            <label style="font-size: 25px; color:black" for="{{ 'field_' . $field->id . '_' . $loop->index }}">
                                                 ➣ {{ $option }}
                                             </label>
                                         </div>
@@ -174,7 +174,7 @@
                         </div>
                     @endif
                     </div>
-                    <a style="font-size: 25px" href="{{ route('form.show-field', ['formId' => $form->id, 'fieldIndex' => $fieldIndex + 1]) }}">Siguiente Pregunta <i class="bi bi-arrow-right-short"></i></a>
+                    <a style="font-size: 25px; ; color: black" href="{{ route('form.show-field', ['formId' => $form->id, 'fieldIndex' => $fieldIndex + 1]) }}">Siguiente Pregunta <i class="bi bi-arrow-right-short"></i></a>
                     </div>
                 </div>
             </div>

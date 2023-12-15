@@ -44,3 +44,9 @@ Route::get('/generar-grafico', [FormController::class, 'generarGrafico'])->name(
 Route::get('/generar-pdf-{formId}', [FormController::class, 'generarPDF'])->name('generar.pdf');
 
 Route::get('/form-field-toggle-active-{fieldId}', [FormController::class, 'toggleActive'])->name('form-field.toggle-active');
+
+Route::post('/assign-users-{formularioId}', [FormController::class,'assignUsers'])->name('assign-users');
+
+Route::post('/unassign-users-{formularioId}', [FormController::class,'unassignUsers'])->name('unassign-users');
+
+Route::get('/formularios-{formId}', [FormController::class,'generarPDF'])->name('formularios.pdf');
