@@ -68,42 +68,47 @@ class FormController extends Controller
     
     
     public function showFieldByIndex($formId, $fieldIndex)
-    {
-        $currentForm = Form::with(['fields' => function($query) use ($fieldIndex) {
-            $query->skip($fieldIndex - 1)->take(1);
-        }, 'assignedUsers'])->findOrFail($formId);
-    
-        $userId = Auth::id();
-        $userRole = Auth::user()->rol;
-    
-        // Verificar si el usuario está asignado al formulario
-        
+{
+    $currentForm = Form::with(['fields' => function($query) use ($fieldIndex) {
+        $query->skip($fieldIndex - 1)->take(1);
+    }, 'assignedUsers'])->findOrFail($formId);
+
+    $userId = Auth::id();
+    $userRole = Auth::user()->rol;
+
+    // Permitir acceso al administrador sin restricciones
+    if ($userRole === 'admin') {
+        $form = $currentForm;
+    } else {
+        // Verificar si el usuario no administrador está asignado al formulario
         if (!$currentForm->assignedUsers->contains($userId)) {
             return redirect()->back()->with('error', 'No tienes permiso para acceder a este formulario.');
         }
-        $form = Form::with(['fields' => function($query) use ($fieldIndex) {
-            $query->skip($fieldIndex - 1)->take(1);
-        }])->findOrFail($formId);
-
-        if ($form->fields->isEmpty()) {
-            return redirect()->back()->with('error', 'No hay más campos en el formulario.');
-        }
-
-        $field = $form->fields->first();
-
-        if ($userRole !== 'admin' && !$field->is_active) {
-            return redirect()->back()->with('error', 'La siguiente pregunta aún no está habilitada, por favor espere a que el administrador la habilite.');
-        }
-
-        $fieldId = 'field_' . $field->id;
-
-        $response = FormResponse::where('form_id', $formId)
-                                ->where('user_id', $userId)
-                                ->first();
-
-        $hasVoted = $response && isset($response->response_data[$fieldId]);
-        return view('asamblea', compact('form', 'field', 'fieldIndex', 'hasVoted', 'currentForm'));
+        $form = $currentForm;
     }
+
+    if ($form->fields->isEmpty()) {
+        return redirect()->back()->with('error', 'No hay más campos en el formulario.');
+    }
+
+    $field = $form->fields->first();
+
+    // Restringir el acceso a las preguntas inactivas para usuarios no administradores
+    if ($userRole !== 'admin' && !$field->is_active) {
+        return redirect()->back()->with('error', 'La siguiente pregunta aún no está habilitada, espera a que el administrador la habilite.');
+    }
+
+    $fieldId = 'field_' . $field->id;
+
+    $response = FormResponse::where('form_id', $formId)
+                            ->where('user_id', $userId)
+                            ->first();
+
+    $hasVoted = $response && isset($response->response_data[$fieldId]);
+
+    return view('asamblea', compact('form', 'field', 'fieldIndex', 'hasVoted', 'currentForm'));
+}
+
 
 
     public function saveResponse(Request $request, $formId)
