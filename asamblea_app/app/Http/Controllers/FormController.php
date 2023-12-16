@@ -66,51 +66,47 @@ class FormController extends Controller
         return view('show_formulario', compact('formularios', 'usuariosAsignadosPorFormulario', 'usuariosParaAsignarPorFormulario'));
     }
     
-    
     public function showFieldByIndex($formId, $fieldIndex)
-{
-    $currentForm = Form::with(['fields' => function($query) use ($fieldIndex) {
-        $query->skip($fieldIndex - 1)->take(1);
-    }, 'assignedUsers'])->findOrFail($formId);
+    {
+        $currentForm = Form::with(['fields' => function($query) use ($fieldIndex) {
+            $query->skip($fieldIndex - 1)->take(1);
+        }, 'assignedUsers'])->findOrFail($formId);
 
-    $userId = Auth::id();
-    $userRole = Auth::user()->rol;
+        $userId = Auth::id();
+        $userRole = Auth::user()->rol;
 
-    // Permitir acceso al administrador sin restricciones
-    if ($userRole === 'admin') {
-        $form = $currentForm;
-    } else {
-        // Verificar si el usuario no administrador está asignado al formulario
-        if (!$currentForm->assignedUsers->contains($userId)) {
-            return redirect()->back()->with('error', 'No tienes permiso para acceder a este formulario.');
+        // Permitir acceso al administrador sin restricciones
+        if ($userRole === 'admin') {
+            $form = $currentForm;
+        } else {
+            // Verificar si el usuario no administrador está asignado al formulario
+            if (!$currentForm->assignedUsers->contains($userId)) {
+                return redirect()->back()->with('error', 'No tienes permiso para acceder a este formulario.');
+            }
+            $form = $currentForm;
         }
-        $form = $currentForm;
+
+        if ($form->fields->isEmpty()) {
+            return redirect()->back()->with('error', 'No hay más campos en el formulario.');
+        }
+
+        $field = $form->fields->first();
+
+        // Restringir el acceso a las preguntas inactivas para usuarios no administradores
+        if ($userRole !== 'admin' && !$field->is_active) {
+            return redirect()->back()->with('error', 'La siguiente pregunta aún no está habilitada, espera a que el administrador la habilite.');
+        }
+
+        $fieldId = 'field_' . $field->id;
+
+        $response = FormResponse::where('form_id', $formId)
+                                ->where('user_id', $userId)
+                                ->first();
+
+        $hasVoted = $response && isset($response->response_data[$fieldId]);
+
+        return view('asamblea', compact('form', 'field', 'fieldIndex', 'hasVoted', 'currentForm'));
     }
-
-    if ($form->fields->isEmpty()) {
-        return redirect()->back()->with('error', 'No hay más campos en el formulario.');
-    }
-
-    $field = $form->fields->first();
-
-    // Restringir el acceso a las preguntas inactivas para usuarios no administradores
-    if ($userRole !== 'admin' && !$field->is_active) {
-        return redirect()->back()->with('error', 'La siguiente pregunta aún no está habilitada, espera a que el administrador la habilite.');
-    }
-
-    $fieldId = 'field_' . $field->id;
-
-    $response = FormResponse::where('form_id', $formId)
-                            ->where('user_id', $userId)
-                            ->first();
-
-    $hasVoted = $response && isset($response->response_data[$fieldId]);
-
-    return view('asamblea', compact('form', 'field', 'fieldIndex', 'hasVoted', 'currentForm'));
-}
-
-
-
     public function saveResponse(Request $request, $formId)
     {
         $userId = Auth::id();
@@ -136,109 +132,66 @@ class FormController extends Controller
     }
 
     public function mostrarRespuestas($formId)
-{
-    $form = Form::with(['fields', 'assignedUsers'])->findOrFail($formId);
-    $formUsers = $form->assignedUsers;
-    $formUsersIds = $formUsers->pluck('id')->toArray();
-    $responses = FormResponse::where('form_id', $formId)->get();
+    {
+        $form = Form::with(['fields', 'assignedUsers'])->findOrFail($formId);
+        $formUsers = $form->assignedUsers;
+        $formUsersIds = $formUsers->pluck('id')->toArray();
+        $responses = FormResponse::where('form_id', $formId)->get();
 
-    $formFields = $form->fields;
+        $formFields = $form->fields;
 
-    $responseCounts = [];
-    $responsePercentages = [];
-    $usersNotVotedByQuestion = [];
-    $votesCountByQuestion = [];
-    $chartData = []; // Array para almacenar los datos del gráfico
+        $responseCounts = [];
+        $responsePercentages = [];
+        $usersNotVotedByQuestion = [];
+        $votesCountByQuestion = [];
+        $chartData = []; // Array para almacenar los datos del gráfico
 
-    foreach ($formFields as $field) {
-        $fieldKey = 'field_' . $field->id;
+        foreach ($formFields as $field) {
+            $fieldKey = 'field_' . $field->id;
 
-        // Inicializar conteo de respuestas
-        foreach ($field->options as $option) {
-            $responseCounts[$fieldKey][$option] = 0;
-        }
-
-        // Contar respuestas reales
-        foreach ($responses as $response) {
-            if (isset($response->response_data[$fieldKey])) {
-                $answer = $response->response_data[$fieldKey];
-                $responseCounts[$fieldKey][$answer]++;
+            // Inicializar conteo de respuestas
+            foreach ($field->options as $option) {
+                $responseCounts[$fieldKey][$option] = 0;
             }
+
+            // Contar respuestas reales
+            foreach ($responses as $response) {
+                if (isset($response->response_data[$fieldKey])) {
+                    $answer = $response->response_data[$fieldKey];
+                    $responseCounts[$fieldKey][$answer]++;
+                }
+            }
+
+            $totalAnswers = array_sum($responseCounts[$fieldKey]);
+            $votesCountByQuestion[$fieldKey] = $totalAnswers;
+
+            // Calcular porcentajes
+            foreach ($responseCounts[$fieldKey] as $answer => $count) {
+                $percentage = $totalAnswers > 0 ? ($count / $totalAnswers) * 100 : 0;
+                $responsePercentages[$fieldKey][$answer] = number_format($percentage, 2);
+            }
+
+            // Calcular usuarios que no han votado en esta pregunta
+            $usersWhoHaveVoted = $responses->filter(function ($response) use ($fieldKey) {
+                return isset($response->response_data[$fieldKey]);
+            })->pluck('user_id')->toArray();
+
+            $usersNotVotedByQuestion[$fieldKey] = $formUsers->reject(function ($user) use ($usersWhoHaveVoted) {
+                return in_array($user->id, $usersWhoHaveVoted);
+            })->values()->mapWithKeys(function ($user) {
+                return [$user->id => $user->name];
+            });
+
+            // Preparar datos para el gráfico
+            $chartData[$field->id] = [
+                'labels' => array_keys($responseCounts[$fieldKey]),
+                'data' => array_values($responseCounts[$fieldKey])
+            ];
         }
 
-        $totalAnswers = array_sum($responseCounts[$fieldKey]);
-        $votesCountByQuestion[$fieldKey] = $totalAnswers;
-
-        // Calcular porcentajes
-        foreach ($responseCounts[$fieldKey] as $answer => $count) {
-            $percentage = $totalAnswers > 0 ? ($count / $totalAnswers) * 100 : 0;
-            $responsePercentages[$fieldKey][$answer] = number_format($percentage, 2);
-        }
-
-        // Calcular usuarios que no han votado en esta pregunta
-        $usersWhoHaveVoted = $responses->filter(function ($response) use ($fieldKey) {
-            return isset($response->response_data[$fieldKey]);
-        })->pluck('user_id')->toArray();
-
-        $usersNotVotedByQuestion[$fieldKey] = $formUsers->reject(function ($user) use ($usersWhoHaveVoted) {
-            return in_array($user->id, $usersWhoHaveVoted);
-        })->values()->mapWithKeys(function ($user) {
-            return [$user->id => $user->name];
-        });
-
-        // Preparar datos para el gráfico
-        $chartData[$field->id] = [
-            'labels' => array_keys($responseCounts[$fieldKey]),
-            'data' => array_values($responseCounts[$fieldKey])
-        ];
+        return view('respuestas', compact('responsePercentages', 'responseCounts', 'formFields', 'usersNotVotedByQuestion', 'votesCountByQuestion', 'form', 'chartData'));
     }
 
-    return view('respuestas', compact('responsePercentages', 'responseCounts', 'formFields', 'usersNotVotedByQuestion', 'votesCountByQuestion', 'form', 'chartData'));
-}
-
-    
-    public function generarGrafico() {
-        $datos = [50, 30, 20]; // Ejemplo de datos para el gráfico
-
-        $ancho = 400;
-        $alto = 300;
-        $imagen = imagecreatetruecolor($ancho, $alto);
-
-        // Colores
-        $fondo = imagecolorallocate($imagen, 255, 255, 255);
-        $negro = imagecolorallocate($imagen, 0, 0, 0);
-        $colores = [
-            imagecolorallocate($imagen, 220, 57, 18),
-            imagecolorallocate($imagen, 255, 153, 0),
-            imagecolorallocate($imagen, 51, 102, 204),
-        ];
-
-        // Fondo
-        imagefilledrectangle($imagen, 0, 0, $ancho, $alto, $fondo);
-
-        // Barras
-        $max_valor = max($datos);
-        $x = 50;
-        $ancho_barra = 40;
-        $espaciado = 30;
-
-        foreach ($datos as $indice => $valor) {
-            $altura = ($valor / $max_valor) * ($alto - 60);
-            imagefilledrectangle($imagen, $x, $alto - $altura - 30, $x + $ancho_barra, $alto - 30, $colores[$indice]);
-            $x += $ancho_barra + $espaciado;
-        }
-
-        // Borde
-        imagerectangle($imagen, 0, 0, $ancho - 1, $alto - 1, $negro);
-
-        // Guardar la imagen
-        $ruta_imagen = public_path('graficos/grafico.png');
-        imagepng($imagen, $ruta_imagen);
-        imagedestroy($imagen);
-
-        // Aquí puedes decidir si devuelves la ruta de la imagen o la descarga directamente
-        return response()->download($ruta_imagen);
-    }
 
     public function generarPDF($formId)
     {
@@ -288,7 +241,7 @@ class FormController extends Controller
             // Personas que faltan por votar en esta pregunta
             $pdf->Ln(2);
             $pdf->SetFont('Arial', 'I', 10);
-            $pdf->Cell(0, 10, "Personas que faltan por votar en esta pregunta:", 0, 1);
+            $pdf->MultiCell(0, 10, "Personas que faltan por votar en esta pregunta:", 0, 1);
     
             // Obtener IDs de usuarios asignados que no han votado en esta pregunta
             $assignedUserIds = $form->assignedUsers->pluck('id')->toArray();
@@ -300,14 +253,80 @@ class FormController extends Controller
                                           ->get();
     
             foreach ($usersWhoHaveNotVoted as $user) {
-                $pdf->Cell(0, 10, utf8_decode($user->name), 0, 1);
+                $pdf->MultiCell(0, 10, utf8_decode($user->name), 0, 1);
             }
     
-            $pdf->Ln(5); // Espacio antes de la próxima pregunta
+                $graphData = [];
+            foreach ($answerCounts as $answer => $count) {
+                $graphData[$answer] = $count;
+            }
+
+            // Crear imagen del gráfico
+            $graphTitle = utf8_decode($field->label);
+            $graphImageFile = $this->createBarGraph($graphData, $graphTitle);
+
+            // Agregar la imagen del gráfico al PDF
+            if (file_exists($graphImageFile)) {
+                $pdf->Image($graphImageFile, 10, $pdf->GetY(), 100);
+                unlink($graphImageFile); // Eliminar el archivo de imagen después de usarlo
+            }
+
+            $pdf->Ln(30); // Espacio antes de la próxima pregunta
         }
-    
+
         $pdf->Output('D', 'resultados_asamblea.pdf');
     }
+
+    private function createBarGraph($data)
+{
+    $width = 400;
+    $height = 300;
+    $image = imagecreatetruecolor($width, $height);
+
+    // Colores y texto
+    $white = imagecolorallocate($image, 255, 255, 255);
+    $black = imagecolorallocate($image, 0, 0, 0);
+    imagefill($image, 0, 0, $white);
+
+    // Determinar la altura máxima de las barras
+    $maxValue = max($data);
+
+    // Variables para dibujar las barras
+    $barHeight = 20;
+    $barSpacing = 30;
+    $margin = 30;
+    $y = $margin;  // Iniciar en el margen superior
+
+    foreach ($data as $label => $value) {
+        // Calcular el espacio necesario para el texto
+        $labelSpace = imagefontwidth(2) * strlen($label) + 10;
+        $voteLabelSpace = imagefontwidth(2) * strlen("$value votos") + 10;
+
+        // Ajustar el ancho de la barra para dejar espacio para el texto
+        $barWidth = ($value / $maxValue) * ($width - 2 * $margin - $labelSpace - $voteLabelSpace);  // Ancho de la barra
+        imagefilledrectangle($image, $margin, $y, $margin + $barWidth, $y + $barHeight, $black);
+
+        // Etiqueta de la barra
+        imagestring($image, 2, $margin + $barWidth + 5, $y, utf8_decode($label), $black);
+
+        // Dibujar número de votos junto a la etiqueta
+        imagestring($image, 2, $margin + $barWidth + 5 + $labelSpace, $y, "$value votos", $black);
+
+        $y += $barSpacing;
+    }
+
+    // Guardar la imagen en un archivo temporal
+    $tempFile = tempnam(sys_get_temp_dir(), 'graph') . '.png';
+    imagepng($image, $tempFile);
+
+    // Liberar memoria
+    imagedestroy($image);
+
+    return $tempFile;
+}
+
+
+
     
     public function toggleActive($fieldId)
         {

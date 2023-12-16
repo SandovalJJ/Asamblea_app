@@ -17,7 +17,7 @@ class usuariosController extends Controller
             $usuarios = User::all();
             return DataTables::of($usuarios)
                 ->addColumn('action',function($usuarios){
-                    $acciones = '<a href="" class="btn btn-dark btn-sm"> Editar</a>';
+                    $acciones = '<a href="#" class="btn btn-dark btn-sm edit" data-id="'.$usuarios->id.'"> Editar</a>';
                     $acciones .= '&nbsp;&nbsp;<button type="button" name="delete" id="'.$usuarios->id.'" class=" delete btn btn-primary btn-sm">Borrar</button>';
                     return $acciones;
                 })
@@ -51,6 +51,22 @@ class usuariosController extends Controller
         // Redirigir al usuario de vuelta a la página anterior.
         return response()->json(['success' => 'Usuario creado correctamente.']);
     }
+
+        public function editar(Request $request, $id)
+    {
+        $usuario = User::findOrFail($id);
+        $usuario->name = $request->nombreU;
+        $usuario->email = $request->email;
+        $usuario->cedula = $request->cedula;
+        $usuario->agencia = $request->agencia;
+        $usuario->cuenta = $request->cuenta;
+        $usuario->telefono = $request->telefono;
+        $usuario->rol = $request->rol;
+        $usuario->save();
+
+        return response()->json(['success' => 'Usuario actualizado correctamente.']);
+    }
+
     
     
 

@@ -71,10 +71,11 @@
             <p>Tu información y respuestas son manejadas con la máxima confidencialidad. Solo el personal autorizado tiene acceso a los datos detallados. Si tienes preguntas o inquietudes sobre la seguridad de tus datos, no dudes en contactar al equipo de soporte.</p>
     
             <h3>Soporte:</h3>
-            <p>Si tienes preguntas o necesitas asistencia sobre el uso del sistema, no dudes en contactar al equipo de soporte técnico. Estamos aquí para ayudarte a tener una experiencia fluida y eficiente con el sistema.</p>
+            <p>Si tienes preguntas o necesitas asistencia sobre el uso del sistema, no dudes en contactar al equipo de soporte técnico. Estamos aquí para ayudarte a tener una experiencia fluida y eficiente con el sistema. Llama a: 602 889 3390 ext: 1901</p>
         </div>
+        <br>
         <div class="footer">
-          <p>&copy; 2023 Sistema de Gestión de Formularios de Votación. Todos los derechos reservados.</p>
+          <p style="color: black">&copy; 2023 Sistema de Gestión de Formularios de Votación. Todos los derechos reservados.</p>
         </div>
       </div>
       @extends('layouts.footer')

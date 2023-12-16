@@ -79,7 +79,7 @@
                                     </tr>
                                 @endforeach
                             </table>
-                            <canvas id="chart{{$field->id}}"></canvas>
+
                         @endif
                         <!-- Mostrar número de votos -->
                         <p>Número de votos: {{ $votesCountByQuestion[$fieldKey] ?? '0' }}</p>
@@ -100,35 +100,7 @@
             </div>
              <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         @extends('layouts.footer')
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                @foreach ($formFields as $field)
-                var ctx = document.getElementById('chart{{$field->id}}').getContext('2d');
-                var chartData = @json($chartData[$field->id]);
-    
-                new Chart(ctx, {
-                    type: 'bar', // Puedes cambiar esto a 'line', 'pie', etc. según tus preferencias
-                    data: {
-                        labels: chartData.labels,
-                        datasets: [{
-                            label: 'Número de votos',
-                            data: chartData.data,
-                            backgroundColor: 'rgba(0, 123, 255, 0.5)', // Color de fondo
-                            borderColor: 'rgba(0, 123, 255, 1)', // Color del borde
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-                @endforeach
-            });
-        </script>
+       
         @endsection
     </div>
     @endif

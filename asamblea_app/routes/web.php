@@ -23,6 +23,7 @@ Route::post('/logout',[UserController::class, 'logout'])->name('cerrar');
 //RUTAS PARA LA GESTIÓN DE USUARIOS
 Route::get('usuario',[usuariosController::class, 'index'])->name('usuario.index');
 Route::post('usuario',[usuariosController::class, 'registrar'])->name('usuario.registrar');
+Route::post('/usuario/editar/{id}', [usuariosController::class,'editar'])->name('usuario.editar');
 Route::get('usuario-eliminar-{id}',[usuariosController::class, 'eliminar'])->name('usuario.eliminar');
 
 //RUTAS PARA LA GESTIÓN DE FORMULARIOS
@@ -50,3 +51,5 @@ Route::post('/assign-users-{formularioId}', [FormController::class,'assignUsers'
 Route::post('/unassign-users-{formularioId}', [FormController::class,'unassignUsers'])->name('unassign-users');
 
 Route::get('/formularios-{formId}', [FormController::class,'generarPDF'])->name('formularios.pdf');
+
+
