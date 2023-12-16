@@ -136,58 +136,66 @@ class FormController extends Controller
     }
 
     public function mostrarRespuestas($formId)
-    {
-        $form = Form::with(['fields', 'assignedUsers'])->findOrFail($formId);
-        $formUsers = $form->assignedUsers;
-        $formUsersIds = $formUsers->pluck('id')->toArray();
-        $responses = FormResponse::where('form_id', $formId)->get();
-    
-        $formFields = $form->fields;
-    
-        $responseCounts = [];
-        $responsePercentages = [];
-        $usersNotVotedByQuestion = [];
-        $votesCountByQuestion = [];
-    
-        foreach ($formFields as $field) {
-            $fieldKey = 'field_' . $field->id;
-    
-            // Inicializar conteo de respuestas
-            foreach ($field->options as $option) {
-                $responseCounts[$fieldKey][$option] = 0;
-            }
-    
-            // Contar respuestas reales
-            foreach ($responses as $response) {
-                if (isset($response->response_data[$fieldKey])) {
-                    $answer = $response->response_data[$fieldKey];
-                    $responseCounts[$fieldKey][$answer]++;
-                }
-            }
-    
-            $totalAnswers = array_sum($responseCounts[$fieldKey]);
-            $votesCountByQuestion[$fieldKey] = $totalAnswers;
-    
-            // Calcular porcentajes
-            foreach ($responseCounts[$fieldKey] as $answer => $count) {
-                $percentage = $totalAnswers > 0 ? ($count / $totalAnswers) * 100 : 0;
-                $responsePercentages[$fieldKey][$answer] = number_format($percentage, 2);
-            }
-    
-            // Calcular usuarios que no han votado en esta pregunta
-            $usersWhoHaveVoted = $responses->filter(function ($response) use ($fieldKey) {
-                return isset($response->response_data[$fieldKey]);
-            })->pluck('user_id')->toArray();
-    
-            $usersNotVotedByQuestion[$fieldKey] = $formUsers->reject(function ($user) use ($usersWhoHaveVoted) {
-                return in_array($user->id, $usersWhoHaveVoted);
-            })->values()->mapWithKeys(function ($user) {
-                return [$user->id => $user->name];
-            });
+{
+    $form = Form::with(['fields', 'assignedUsers'])->findOrFail($formId);
+    $formUsers = $form->assignedUsers;
+    $formUsersIds = $formUsers->pluck('id')->toArray();
+    $responses = FormResponse::where('form_id', $formId)->get();
+
+    $formFields = $form->fields;
+
+    $responseCounts = [];
+    $responsePercentages = [];
+    $usersNotVotedByQuestion = [];
+    $votesCountByQuestion = [];
+    $chartData = []; // Array para almacenar los datos del gráfico
+
+    foreach ($formFields as $field) {
+        $fieldKey = 'field_' . $field->id;
+
+        // Inicializar conteo de respuestas
+        foreach ($field->options as $option) {
+            $responseCounts[$fieldKey][$option] = 0;
         }
-    
-        return view('respuestas', compact('responsePercentages', 'responseCounts', 'formFields', 'usersNotVotedByQuestion', 'votesCountByQuestion', 'form'));
+
+        // Contar respuestas reales
+        foreach ($responses as $response) {
+            if (isset($response->response_data[$fieldKey])) {
+                $answer = $response->response_data[$fieldKey];
+                $responseCounts[$fieldKey][$answer]++;
+            }
+        }
+
+        $totalAnswers = array_sum($responseCounts[$fieldKey]);
+        $votesCountByQuestion[$fieldKey] = $totalAnswers;
+
+        // Calcular porcentajes
+        foreach ($responseCounts[$fieldKey] as $answer => $count) {
+            $percentage = $totalAnswers > 0 ? ($count / $totalAnswers) * 100 : 0;
+            $responsePercentages[$fieldKey][$answer] = number_format($percentage, 2);
+        }
+
+        // Calcular usuarios que no han votado en esta pregunta
+        $usersWhoHaveVoted = $responses->filter(function ($response) use ($fieldKey) {
+            return isset($response->response_data[$fieldKey]);
+        })->pluck('user_id')->toArray();
+
+        $usersNotVotedByQuestion[$fieldKey] = $formUsers->reject(function ($user) use ($usersWhoHaveVoted) {
+            return in_array($user->id, $usersWhoHaveVoted);
+        })->values()->mapWithKeys(function ($user) {
+            return [$user->id => $user->name];
+        });
+
+        // Preparar datos para el gráfico
+        $chartData[$field->id] = [
+            'labels' => array_keys($responseCounts[$fieldKey]),
+            'data' => array_values($responseCounts[$fieldKey])
+        ];
     }
+
+    return view('respuestas', compact('responsePercentages', 'responseCounts', 'formFields', 'usersNotVotedByQuestion', 'votesCountByQuestion', 'form', 'chartData'));
+}
+
     
     public function generarGrafico() {
         $datos = [50, 30, 20]; // Ejemplo de datos para el gráfico
