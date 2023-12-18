@@ -17,7 +17,7 @@ class usuariosController extends Controller
             $usuarios = User::all();
             return DataTables::of($usuarios)
                 ->addColumn('action',function($usuarios){
-                    $acciones = '<a href="#" class="btn btn-dark btn-sm edit" data-id="'.$usuarios->id.'"> Editar</a>';
+                    $acciones = '<button type="button" class="btn btn-dark btn-sm edit" data-id="' . $usuarios->id . '">Editar</button>';
                     $acciones .= '&nbsp;&nbsp;<button type="button" name="delete" id="'.$usuarios->id.'" class=" delete btn btn-primary btn-sm">Borrar</button>';
                     return $acciones;
                 })
@@ -38,17 +38,9 @@ class usuariosController extends Controller
         $usuario->cuenta = $request->cuenta;
         $usuario->telefono = $request->telefono;
         $usuario->rol = $request->rol;
-        
-        // Generar una contraseña encriptada a partir de la cédula del usuario.
         $password = Hash::make($request->cedula);
-        
-        // Asignar la contraseña encriptada al campo de contraseña.
         $usuario->password = $password;
-    
-        // Guardar el nuevo usuario en la base de datos.
         $usuario->save();
-    
-        // Redirigir al usuario de vuelta a la página anterior.
         return response()->json(['success' => 'Usuario creado correctamente.']);
     }
 
@@ -62,13 +54,11 @@ class usuariosController extends Controller
         $usuario->cuenta = $request->cuenta;
         $usuario->telefono = $request->telefono;
         $usuario->rol = $request->rol;
+
         $usuario->save();
 
         return response()->json(['success' => 'Usuario actualizado correctamente.']);
     }
-
-    
-    
 
     public function eliminar($id) {
         $usuario = User::findOrFail($id);

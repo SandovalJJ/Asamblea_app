@@ -217,6 +217,7 @@ class FormController extends Controller
             $pdf->MultiCell(0, 10, utf8_decode($field->label), 1, 'L', true);
             $pdf->Ln(2);
     
+            
             // Inicializar conteo de respuestas
             $answerCounts = [];
             if (isset($field->options) && is_array($field->options)) {
@@ -237,13 +238,6 @@ class FormController extends Controller
                 $percentage = $totalAnswers > 0 ? ($count / $totalAnswers) * 100 : 0;
                 $pdf->MultiCell(0, 10, utf8_decode("Respuesta: $answer - Votos: $count - " . number_format($percentage, 2) . '%'), 0, 'L');
             }
-    
-            // Personas que faltan por votar en esta pregunta
-            $pdf->Ln(2);
-            $pdf->SetFont('Arial', 'I', 10);
-            $pdf->MultiCell(0, 10, "Personas que faltan por votar en esta pregunta:", 0, 1);
-    
-            // Obtener IDs de usuarios asignados que no han votado en esta pregunta
             $assignedUserIds = $form->assignedUsers->pluck('id')->toArray();
             $usersWhoVoted = $responses->filter(function ($response) use ($fieldKey) {
                 return isset($response->response_data[$fieldKey]);
@@ -251,6 +245,18 @@ class FormController extends Controller
             $usersWhoHaveNotVoted = User::whereIn('id', $assignedUserIds)
                                           ->whereNotIn('id', $usersWhoVoted)
                                           ->get();
+            // Personas que faltan por votar en esta pregunta
+            if (!$usersWhoHaveNotVoted->isEmpty()) {
+                $pdf->Ln(2);
+                $pdf->SetFont('Arial', 'I', 10);
+                $pdf->MultiCell(0, 10, "Personas que faltan por votar en esta pregunta:", 0, 1);
+            
+                foreach ($usersWhoHaveNotVoted as $user) {
+                    $pdf->MultiCell(0, 10, utf8_decode($user->name), 0, 1);
+                }
+            }
+            // Obtener IDs de usuarios asignados que no han votado en esta pregunta
+            
     
             foreach ($usersWhoHaveNotVoted as $user) {
                 $pdf->MultiCell(0, 10, utf8_decode($user->name), 0, 1);
@@ -277,57 +283,56 @@ class FormController extends Controller
         $pdf->Output('D', 'resultados_asamblea.pdf');
     }
 
+
+
     private function createBarGraph($data)
-{
-    $width = 400;
-    $height = 300;
-    $image = imagecreatetruecolor($width, $height);
+        {
+            $width = 400;
+            $height = 300;
+            $image = imagecreatetruecolor($width, $height);
 
-    // Colores y texto
-    $white = imagecolorallocate($image, 255, 255, 255);
-    $black = imagecolorallocate($image, 0, 0, 0);
-    imagefill($image, 0, 0, $white);
+            // Colores y texto
+            $white = imagecolorallocate($image, 255, 255, 255);
+            $black = imagecolorallocate($image, 0, 0, 0);
+            imagefill($image, 0, 0, $white);
 
-    // Determinar la altura máxima de las barras
-    $maxValue = max($data);
+            // Determinar la altura máxima de las barras
+            $maxValue = max($data);
 
-    // Variables para dibujar las barras
-    $barHeight = 20;
-    $barSpacing = 30;
-    $margin = 30;
-    $y = $margin;  // Iniciar en el margen superior
+            // Variables para dibujar las barras
+            $barHeight = 20;
+            $barSpacing = 30;
+            $margin = 30;
+            $y = $margin;  // Iniciar en el margen superior
 
-    foreach ($data as $label => $value) {
-        // Calcular el espacio necesario para el texto
-        $labelSpace = imagefontwidth(2) * strlen($label) + 10;
-        $voteLabelSpace = imagefontwidth(2) * strlen("$value votos") + 10;
+            foreach ($data as $label => $value) {
+                // Calcular el espacio necesario para el texto
+                $labelSpace = imagefontwidth(2) * strlen($label) + 10;
+                $voteLabelSpace = imagefontwidth(2) * strlen("$value votos") + 10;
 
-        // Ajustar el ancho de la barra para dejar espacio para el texto
-        $barWidth = ($value / $maxValue) * ($width - 2 * $margin - $labelSpace - $voteLabelSpace);  // Ancho de la barra
-        imagefilledrectangle($image, $margin, $y, $margin + $barWidth, $y + $barHeight, $black);
+                // Ajustar el ancho de la barra para dejar espacio para el texto
+                $barWidth = ($value / $maxValue) * ($width - 2 * $margin - $labelSpace - $voteLabelSpace);  // Ancho de la barra
+                imagefilledrectangle($image, $margin, $y, $margin + $barWidth, $y + $barHeight, $black);
 
-        // Etiqueta de la barra
-        imagestring($image, 2, $margin + $barWidth + 5, $y, utf8_decode($label), $black);
+                // Etiqueta de la barra
+                imagestring($image, 2, $margin + $barWidth + 5, $y, utf8_decode($label), $black);
 
-        // Dibujar número de votos junto a la etiqueta
-        imagestring($image, 2, $margin + $barWidth + 5 + $labelSpace, $y, "$value votos", $black);
+                // Dibujar número de votos junto a la etiqueta
+                imagestring($image, 2, $margin + $barWidth + 5 + $labelSpace, $y, "$value votos", $black);
 
-        $y += $barSpacing;
-    }
+                $y += $barSpacing;
+            }
 
-    // Guardar la imagen en un archivo temporal
-    $tempFile = tempnam(sys_get_temp_dir(), 'graph') . '.png';
-    imagepng($image, $tempFile);
+            // Guardar la imagen en un archivo temporal
+            $tempFile = tempnam(sys_get_temp_dir(), 'graph') . '.png';
+            imagepng($image, $tempFile);
 
-    // Liberar memoria
-    imagedestroy($image);
+            // Liberar memoria
+            imagedestroy($image);
 
-    return $tempFile;
-}
+            return $tempFile;
+        }
 
-
-
-    
     public function toggleActive($fieldId)
         {
             $field = FormField::findOrFail($fieldId);
@@ -357,11 +362,4 @@ class FormController extends Controller
 
             return back()->with('success', 'Usuarios asignados al formulario correctamente.');
         }
-
-
-
-
-        
-
 }
-
