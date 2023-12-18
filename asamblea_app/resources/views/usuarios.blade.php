@@ -177,7 +177,7 @@
       //TABLA QUE MUESTRA LOS USUARIOS
       $(document).ready(function(){
     var user = $('#tabla-usuarios').DataTable({
-        responsive: true,
+        responsive: false,
         processing: true,
         serverSide: true,
         ajax: {
@@ -243,6 +243,7 @@
         });
     });
   </script>
+  
   <script>
           var user_id;
           $(document).on('click', '.delete', function(){

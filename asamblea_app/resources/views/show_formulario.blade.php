@@ -77,10 +77,10 @@
                                             @if(is_array($field->options))
                                                 @foreach($field->options as $option)
                                                     <div class="form-check">
-                                                        <input  type="radio" name="{{ $field->label }}" id="{{ $option }}">
-                                                        <label for="{{ $option }}">
-                                                            {{ $option }}
-                                                        </label>
+                                                        <p  type="radio" name="{{ $field->label }}" id="{{ $option }}">
+                                                        <p for="{{ $option }}">
+                                                            ⮕ {{ $option }}
+                                                        </p>
                                                     </div>
                                                 @endforeach
                                             @endif

@@ -274,16 +274,14 @@ class FormController extends Controller
             // Agregar la imagen del gráfico al PDF
             if (file_exists($graphImageFile)) {
                 $pdf->Image($graphImageFile, 10, $pdf->GetY(), 100);
-                unlink($graphImageFile); // Eliminar el archivo de imagen después de usarlo
+                unlink($graphImageFile); 
             }
 
-            $pdf->Ln(30); // Espacio antes de la próxima pregunta
+            $pdf->Ln(30); 
         }
 
         $pdf->Output('D', 'resultados_asamblea.pdf');
     }
-
-
 
     private function createBarGraph($data)
         {
